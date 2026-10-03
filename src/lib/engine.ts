@@ -65,7 +65,7 @@ function frame(time: number) {
   last = time;
 
   if (smoothOn && Math.abs(target - current) > 0.4) {
-    current = lerp(current, target, 1 - Math.pow(1 - 0.12, dt / 16.67));
+    current = lerp(current, target, 1 - Math.pow(1 - 0.15, dt / 16.67));
     selfScrolling = true;
     window.scrollTo(0, current);
   }
@@ -90,6 +90,7 @@ function onResize() {
   state.vh = window.innerHeight;
   env.small = state.vw < 768;
   target = clamp(target, 0, maxScroll());
+  invalidateRects();
 }
 
 function onPointer(e: PointerEvent) {
@@ -147,6 +148,9 @@ export function initEngine() {
   prevScroll = current = target = window.scrollY;
 
   window.addEventListener("resize", onResize, { passive: true });
+  // page height changes (fonts, images, fitted titles) → re-measure lazily
+  if ("ResizeObserver" in window) new ResizeObserver(() => invalidateRects()).observe(document.body);
+  document.fonts?.ready.then(() => invalidateRects()).catch(() => {});
   window.addEventListener("pointermove", onPointer, { passive: true });
   window.addEventListener("scroll", onNativeScroll, { passive: true });
 
@@ -177,9 +181,32 @@ export function onTick(fn: Tick) {
   };
 }
 
+/* ── Layout cache ───────────────────────────────────────────────────────
+ * Reading getBoundingClientRect() inside the frame loop, after other
+ * components have written transforms, forces a synchronous layout on every
+ * read (layout thrashing). Instead we measure document positions once and
+ * derive viewport rects from the scroll value. The cache is invalidated on
+ * resize, font load and any change in page height.
+ */
+type DocRect = { top: number; left: number; width: number; height: number };
+const rectCache = new Map<Element, DocRect>();
+export function invalidateRects() {
+  rectCache.clear();
+}
+/** Viewport rect of an (untransformed) element without forcing layout per frame. */
+export function rectOf(el: Element) {
+  let r = rectCache.get(el);
+  if (!r) {
+    const b = el.getBoundingClientRect();
+    r = { top: b.top + window.scrollY, left: b.left + window.scrollX, width: b.width, height: b.height };
+    rectCache.set(el, r);
+  }
+  return { top: r.top - state.scroll, left: r.left, width: r.width, height: r.height, bottom: r.top - state.scroll + r.height };
+}
+
 /** Section progress: 0 when the element's top hits the viewport bottom, 1 when its bottom leaves the top. */
 export function progressOf(el: Element) {
-  const r = el.getBoundingClientRect();
+  const r = rectOf(el);
   const total = r.height + state.vh;
   return clamp((state.vh - r.top) / total, 0, 1);
 }

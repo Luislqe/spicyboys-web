@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { SITE } from "@/data/site";
-import { clamp, env, lerp, onTick, state } from "@/lib/engine";
+import { clamp, env, lerp, onTick, rectOf, state } from "@/lib/engine";
 
 /**
  * CONNECTED — the only light section. The panel opens from a slit as you scroll in,
@@ -21,14 +21,25 @@ export function Connected() {
     const fd = field.current;
     if (!sec || !pn || !fd) return;
     let visible = false;
-    const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting), { rootMargin: "10% 0px" });
+    const root = document.documentElement;
+    const setHud = (top: boolean, bottom: boolean) => {
+      if (root.classList.contains("hud-dark") !== top) root.classList.toggle("hud-dark", top);
+      if (root.classList.contains("corners-dark") !== bottom) root.classList.toggle("corners-dark", bottom);
+    };
+    const io = new IntersectionObserver(
+      ([e]) => {
+        visible = e.isIntersecting;
+        if (!visible) setHud(false, false);
+      },
+      { rootMargin: "10% 0px" },
+    );
     io.observe(sec);
 
     let inside = false;
     let lastMove = 0;
     const pos = { x: 0.5, y: 0.5, r: 0 };
     const move = (x: number, y: number) => {
-      const r = fd.getBoundingClientRect();
+      const r = rectOf(fd);
       pos.x = lerp(pos.x, (x - r.left) / r.width, 1);
       pos.y = lerp(pos.y, (y - r.top) / r.height, 1);
       inside = true;
@@ -43,15 +54,26 @@ export function Connected() {
     fd.addEventListener("pointerleave", leave);
 
     const cur = { x: 0.5, y: 0.5, r: 0 };
+    let lastClip = "";
+    let lastMask = "";
     const off = onTick((t) => {
       if (!visible) return;
       // slit → full panel as the section arrives
-      const r = sec.getBoundingClientRect();
+      const r = rectOf(sec);
       const enter = clamp((state.vh - r.top) / (state.vh * 0.75), 0, 1);
       const e = env.reduced ? 1 : 1 - Math.pow(1 - enter, 3);
-      const side = (1 - e) * 42;
-      const vert = (1 - e) * 18;
-      pn.style.clipPath = `inset(${vert.toFixed(2)}% ${side.toFixed(2)}% ${vert.toFixed(2)}% ${side.toFixed(2)}%)`;
+      const clip =
+        e >= 0.999
+          ? "none"
+          : `inset(${((1 - e) * 18).toFixed(1)}% ${((1 - e) * 42).toFixed(1)}% ${((1 - e) * 18).toFixed(1)}% ${((1 - e) * 42).toFixed(1)}%)`;
+      if (clip !== lastClip) {
+        pn.style.clipPath = clip;
+        lastClip = clip;
+      }
+      // HUD turns dark only where the light panel is actually behind it
+      const pr = rectOf(pn);
+      const open = e > 0.9;
+      setHud(open && pr.top < 56 && pr.bottom > 30, open && pr.top < state.vh - 30 && pr.bottom > state.vh - 20);
 
       // torch
       const idle = !inside || performance.now() - lastMove > 2500;
@@ -61,14 +83,20 @@ export function Connected() {
       cur.x = lerp(cur.x, tx, 0.12);
       cur.y = lerp(cur.y, ty, 0.12);
       cur.r = lerp(cur.r, tr, 0.08);
-      fd.style.setProperty("--tx", `${(cur.x * 100).toFixed(2)}%`);
-      fd.style.setProperty("--ty", `${(cur.y * 100).toFixed(2)}%`);
-      fd.style.setProperty("--tr", `${cur.r.toFixed(1)}px`);
+      // only repaint the mask when the torch actually moved
+      const key = `${(cur.x * 100).toFixed(1)}|${(cur.y * 100).toFixed(1)}|${cur.r.toFixed(0)}`;
+      if (key !== lastMask) {
+        lastMask = key;
+        fd.style.setProperty("--tx", `${(cur.x * 100).toFixed(1)}%`);
+        fd.style.setProperty("--ty", `${(cur.y * 100).toFixed(1)}%`);
+        fd.style.setProperty("--tr", `${cur.r.toFixed(0)}px`);
+      }
     });
 
     return () => {
       off();
       io.disconnect();
+      setHud(false, false);
       fd.removeEventListener("pointermove", pm);
       fd.removeEventListener("touchmove", tm);
       fd.removeEventListener("touchstart", tm);

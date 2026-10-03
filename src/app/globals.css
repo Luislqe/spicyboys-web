@@ -298,11 +298,12 @@ html.js .loader {
 }
 .bg__glow {
   position: absolute;
-  inset: 0;
+  inset: -25%;
   background:
-    radial-gradient(38% 34% at var(--glow-x, 50%) var(--glow-y, 30%), var(--tint), transparent 72%),
-    radial-gradient(55% 45% at 85% 105%, rgba(236, 232, 225, 0.05), transparent 70%);
+    radial-gradient(28% 26% at 50% 40%, var(--tint), transparent 72%),
+    radial-gradient(40% 34% at 80% 95%, rgba(236, 232, 225, 0.05), transparent 70%);
   transition: --tint 0.9s linear;
+  will-change: transform;
 }
 html[data-section="top"] .bg__glow {
   --tint: rgba(255, 45, 26, 0.1);
@@ -348,7 +349,8 @@ html.is-rave .bg__grid {
 .bg__grain {
   position: absolute;
   inset: -120px;
-  opacity: 0.6;
+  opacity: 0.5;
+  will-change: transform;
   animation: grain 0.9s steps(6) infinite;
   transition: opacity 0.3s;
 }
@@ -365,16 +367,13 @@ html.is-noisy .bg__grain {
   83% { transform: translate(-18px, 66px); }
   100% { transform: translate(0, 0); }
 }
+/* scanlines + vignette in ONE static layer (one less full-screen blend) */
 .bg__scan {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, 0.22) 2px 3px);
-  opacity: 0.55;
-}
-.bg__vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.72));
+  background:
+    radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.72)),
+    repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, 0.12) 2px 3px);
 }
 
 /* ═══ CURSOR ═════════════════════════════════════════════════════════════ */
@@ -515,8 +514,14 @@ html.cursor-out .cursor {
   gap: 24px;
   padding: calc(env(safe-area-inset-top, 0px) + 14px) var(--gut) 14px;
   color: var(--bone);
-  mix-blend-mode: difference;
   pointer-events: none;
+  transition: color 0.3s;
+}
+/* light section: HUD flips to dark (replaces mix-blend-mode, which forced
+   the browser to re-blend the whole page on every scroll frame) */
+html.hud-dark .hud,
+html.corners-dark .hud__corner {
+  color: var(--void);
 }
 .hud > * {
   pointer-events: auto;
@@ -620,9 +625,10 @@ html.cursor-out .cursor {
   align-items: center;
   gap: 10px;
   color: var(--bone);
-  mix-blend-mode: difference;
   pointer-events: none;
-  transition: opacity 0.3s;
+  transition:
+    opacity 0.3s,
+    color 0.3s;
 }
 .hud__corner--bl {
   left: var(--gut);
@@ -704,7 +710,6 @@ html.is-locked-menu .hud__corner {
   opacity: 0;
 }
 html.is-locked-menu .hud {
-  mix-blend-mode: normal;
   color: var(--void);
 }
 .menu__inner {
@@ -861,8 +866,8 @@ html.js [data-reveal]:not(.is-in) .ch {
   color: var(--signal);
 }
 .hero__title {
-  --ca: 0px;
   position: relative;
+  will-change: opacity;
   align-self: center;
   width: 100%;
   font-size: 22vw;
@@ -923,9 +928,11 @@ html.js [data-reveal]:not(.is-in) .ch {
 }
 .hero__ch-in {
   display: inline-block;
+}
+.hero__title.is-fast .hero__layer--base .hero__ch-in {
   text-shadow:
-    var(--ca) 0 0 rgba(255, 45, 26, 0.6),
-    calc(var(--ca) * -1) 0 0 rgba(80, 190, 255, 0.45);
+    3px 0 0 rgba(255, 45, 26, 0.6),
+    -3px 0 0 rgba(80, 190, 255, 0.45);
 }
 html.js .hero__ch-in {
   opacity: 0;
@@ -1105,13 +1112,12 @@ html.is-rave .hero__title {
   padding: 5vh var(--gut) 5vh;
 }
 .music__title {
-  --track: -0.06em;
   white-space: nowrap;
   font-size: clamp(92px, 22vw, 420px);
   font-weight: 900;
   font-stretch: 100%;
   line-height: 0.78;
-  letter-spacing: var(--track);
+  letter-spacing: -0.06em;
   transform-origin: 0% 100%;
   will-change: transform;
 }
@@ -2386,4 +2392,75 @@ html.is-rave .rave-flash {
   .bg__grain {
     animation: none;
   }
+}
+
+/* ═══ VISUALS: video frames + lightbox ═══════════════════════════════════ */
+.frame__media > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(0.35) contrast(1.1);
+  transform: scale(1.2);
+  transition: transform 1.3s var(--ease-out) calc(var(--i) * 90ms), filter 0.3s;
+}
+.frame:hover .frame__media > video {
+  filter: grayscale(0) contrast(1.15);
+}
+.frame__rec {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  color: var(--signal);
+  background: rgba(5, 5, 5, 0.7);
+  padding: 2px 6px;
+  animation: beat 1s steps(1) infinite;
+}
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 108;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) var(--gut) calc(env(safe-area-inset-bottom, 0px) + 18px);
+  background: rgba(5, 5, 5, 0.96);
+  clip-path: inset(50% 0 50% 0);
+  visibility: hidden;
+  transition:
+    clip-path 0.45s var(--ease-snap),
+    visibility 0s 0.45s;
+}
+.lightbox.is-open {
+  clip-path: inset(0 0 0 0);
+  visibility: visible;
+  transition: clip-path 0.45s var(--ease-snap);
+}
+.lightbox__bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--line-2);
+  padding-bottom: 10px;
+}
+.lightbox__bar button {
+  border: 1px solid var(--line-2);
+  padding: 8px 12px;
+}
+.lightbox__bar button:hover {
+  background: var(--bone);
+  color: var(--void);
+}
+.lightbox__media {
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+.lightbox__media video,
+.lightbox__media img {
+  max-width: 100%;
+  max-height: 100%;
+  background: var(--void);
 }

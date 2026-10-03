@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type RefObject } from "react";
-import { env, onTick, state, type Tick } from "./engine";
+import { env, onTick, rectOf, state, type Tick } from "./engine";
 
 /** Subscribe to the shared frame loop. `fn` is kept fresh via a ref. */
 export function useTick(fn: Tick, enabled = true) {
@@ -37,14 +37,16 @@ export function useMagnetic<T extends HTMLElement>(ref: RefObject<T | null>, str
   useTick(() => {
     const el = ref.current;
     if (!el || env.touch || env.reduced) return;
-    const r = el.getBoundingClientRect();
+    // cached, untransformed position (no forced layout per frame)
+    const r = rectOf(el.parentElement ?? el);
     if (r.bottom < -radius || r.top > state.vh + radius) return;
-    const cx = r.left + r.width / 2 - pos.current.x;
-    const cy = r.top + r.height / 2 - pos.current.y;
+    const own = rectOf(el);
+    const cx = own.left + own.width / 2;
+    const cy = own.top + own.height / 2;
     const dx = state.mx - cx;
     const dy = state.my - cy;
     const inside =
-      Math.abs(dx) < r.width / 2 + radius && Math.abs(dy) < r.height / 2 + radius && state.pointerActive;
+      Math.abs(dx) < own.width / 2 + radius && Math.abs(dy) < own.height / 2 + radius && state.pointerActive;
     const tx = inside ? dx * strength : 0;
     const ty = inside ? dy * strength : 0;
     pos.current.x += (tx - pos.current.x) * 0.16;

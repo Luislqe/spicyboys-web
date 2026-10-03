@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type CSSProperties } from "react";
 import { SITE } from "@/data/site";
-import { clamp, env, lerp, onTick, state } from "@/lib/engine";
+import { clamp, env, invalidateRects, lerp, onTick, rectOf, state } from "@/lib/engine";
 
 const LINES = ["SPICY", "BOYS"] as const;
 
@@ -62,6 +62,7 @@ export function Hero() {
       h1.style.fontSize = `${fs.toFixed(2)}px`;
       const l2 = lines[0][1];
       h1.style.setProperty("--boys-w", `${l2.scrollWidth}px`);
+      invalidateRects();
       centers = chars[0].map((c) => {
         const line = c.parentElement as HTMLElement;
         return {
@@ -107,8 +108,8 @@ export function Hero() {
 
     const off = onTick((t) => {
       if (!visible) return;
-      const r = h1.getBoundingClientRect();
-      const secH = sec.offsetHeight || state.vh;
+      const r = rectOf(h1);
+      const secH = rectOf(sec).height || state.vh;
       const p = env.reduced ? 0 : clamp(state.scroll / (secH * 0.85), 0, 1);
 
       // pointer (or an idle scanner on touch screens)
@@ -131,9 +132,9 @@ export function Hero() {
       lensEl.style.setProperty("--ly", `${ly.toFixed(1)}px`);
       lensEl.style.setProperty("--lr", `${lensR.toFixed(1)}px`);
 
-      // chromatic split from scroll speed (very subtle)
-      const ca = clamp(Math.abs(state.velocity) * 0.12, 0, 4);
-      h1.style.setProperty("--ca", `${ca.toFixed(2)}px`);
+      // chromatic split only while scrolling fast (class toggle = no per-frame repaint)
+      const fast = Math.abs(state.velocity) > 14;
+      if (fast !== h1.classList.contains("is-fast")) h1.classList.toggle("is-fast", fast);
 
       if (env.reduced) return;
 

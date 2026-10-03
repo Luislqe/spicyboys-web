@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { KIND_LABEL, MUSIC, type MusicItem } from "@/data/music";
 import { SITE } from "@/data/site";
-import { clamp, emit, env, lerp, on, onTick, progressOf, state } from "@/lib/engine";
+import { clamp, emit, env, lerp, on, onTick, progressOf, rectOf, state } from "@/lib/engine";
 import { Art } from "./Art";
 import { SectionHead } from "./SectionHead";
 import { Split } from "./Split";
@@ -52,11 +52,10 @@ export function Music() {
         const e = clamp(p * 2.2, 0, 1);
         const s = 0.78 + e * 0.22;
         h.style.transform = `translate3d(${((1 - e) * -6).toFixed(2)}vw,0,0) scale(${s.toFixed(3)})`;
-        h.style.setProperty("--track", `${((1 - e) * 0.25 - 0.06).toFixed(3)}em`);
       }
       // floating cover follows the pointer inside the list
       if (pv && list.current && !env.touch) {
-        const lr = list.current.getBoundingClientRect();
+        const lr = rectOf(list.current);
         const tx = state.mx - lr.left;
         const ty = state.my - lr.top;
         const px = pos.x;

@@ -71,7 +71,7 @@ export function Background() {
     resize();
     window.addEventListener("resize", resize);
 
-    const count = env.small || env.touch ? 24 : 60;
+    const count = env.small || env.touch ? 22 : 42;
     const P = Array.from({ length: count }, () => ({
       x: Math.random() * W,
       y: Math.random() * H,
@@ -167,16 +167,21 @@ export function Background() {
       }
     };
 
+    // particles are slow: 30fps is visually identical and halves the cost
+    let odd = false;
     const off = onTick((t) => {
-      draw(t);
+      odd = !odd;
+      if (odd || env.reduced) draw(t);
       if (grid.current) {
         const y = -(state.scroll * 0.15) % 80;
         grid.current.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`;
       }
-      // set on the layer itself (not :root) so only this element restyles
-      const gs = glow.current?.style;
-      gs?.setProperty("--glow-x", `${(50 + state.nx * 8).toFixed(2)}%`);
-      gs?.setProperty("--glow-y", `${(30 + state.progress * 50).toFixed(2)}%`);
+      // glow follows pointer/scroll with a transform (composited, no repaint)
+      if (glow.current) {
+        const gx = state.nx * state.vw * 0.08;
+        const gy = (state.progress - 0.3) * state.vh * 0.5;
+        glow.current.style.transform = `translate3d(${gx.toFixed(0)}px, ${gy.toFixed(0)}px, 0)`;
+      }
     });
 
     return () => {
@@ -195,7 +200,6 @@ export function Background() {
       <canvas ref={canvas} className="bg__canvas" />
       <div ref={grain} className="bg__grain" />
       <div className="bg__scan" />
-      <div className="bg__vignette" />
     </div>
   );
 }

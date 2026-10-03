@@ -50,9 +50,16 @@ pista del dock son reales (controlan el widget). La forma de onda es decorativa 
 etiqueta “WAVE / VISUAL”. Si el Widget API no carga, los controles propios se ocultan y el
 reproductor oficial sigue funcionando.
 
-### Fotos
-Las 6 piezas de VISUALS son arte generativo (canvas, 1-bit, estilo flyer fotocopiado) hasta
-que pongas `src: "/visuals/foto.jpg"` en cada una. Usa solo fotos vuestras o con permiso.
+### Vídeos y fotos (VISUALS)
+Cada marco de VISUALS acepta, por prioridad:
+1. `video: "/visuals/clip.mp4"` (+ `poster: "/visuals/clip.jpg"`) → se reproduce en bucle y
+   sin sonido mientras está en pantalla; al hacer click se abre a pantalla completa con sonido.
+2. `src: "/visuals/foto.jpg"` → foto.
+3. Nada → arte generativo 1-bit.
+
+Sube los archivos a `public/visuals/` en GitHub y edita `src/data/visuals.ts`.
+Recomendado: clips de 6–20 s, 720p, MP4 (H.264), menos de 6 MB cada uno.
+Usa solo material vuestro o con permiso.
 
 ## Mapa de interacciones
 

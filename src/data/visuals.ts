@@ -1,9 +1,15 @@
 /**
  * VISUALS
  * -------
- * Each frame renders generated artwork (1-bit dithered "photocopy flyer" studies)
- * until you give it a `src`. Drop your own photos in /public/visuals and set `src`.
- * Only use images you own or have permission to use.
+ * Each frame shows, in order of priority:
+ *   1. `video`  → your own clip (MP4/WebM in /public/visuals). Plays muted on loop
+ *                 while on screen; click opens it full screen WITH sound.
+ *   2. `src`    → your own photo (JPG/WebP in /public/visuals).
+ *   3. nothing  → generated 1-bit "photocopy flyer" artwork.
+ * Only use media you own or have permission to use.
+ *
+ * Video tips: 6–20 s loops, 720p, H.264 MP4, ideally < 6 MB each.
+ * Add a `poster` (a JPG still) so the frame shows instantly before the video loads.
  *
  * Layout values are for desktop (percent of the gallery box). Mobile ignores them
  * and turns the gallery into a swipe strip.
@@ -16,6 +22,10 @@ export type Visual = {
   caption: string;
   style: VisualStyle;
   src?: string;
+  /** e.g. "/visuals/set-01.mp4" */
+  video?: string;
+  /** still image shown before the video loads, e.g. "/visuals/set-01.jpg" */
+  poster?: string;
   alt: string;
   /** left / top / width in % of the gallery; ratio = width / height */
   x: number;
