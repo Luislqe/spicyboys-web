@@ -1,30 +1,18 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-  type KeyboardEvent as RKE,
-  type MouseEvent as RME,
-} from "react";
-import { KIND_LABEL, widgetSrc, type MusicItem } from "@/data/music";
-import { emit, mulberry, on } from "@/lib/engine";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { SESSIONS, todayIndex, widgetSrc, type MusicItem } from "@/data/music";
+import { SITE } from "@/data/site";
+import { emit, on } from "@/lib/engine";
 
 /* Minimal typing for SoundCloud's official Widget API (w.soundcloud.com/player/api.js) */
-type SCSound = { title?: string; user?: { username?: string }; permalink_url?: string; duration?: number };
+type SCSound = { title?: string; user?: { username?: string }; permalink_url?: string };
 type SCWidget = {
   bind: (ev: string, cb: (e?: { currentPosition: number; relativePosition: number }) => void) => void;
-  unbind: (ev: string) => void;
   toggle: () => void;
   play: () => void;
   pause: () => void;
-  next: () => void;
-  prev: () => void;
-  seekTo: (ms: number) => void;
-  getDuration: (cb: (ms: number) => void) => void;
+  load: (url: string, opts: Record<string, unknown>) => void;
   getCurrentSound: (cb: (s: SCSound | null) => void) => void;
 };
 type SCGlobal = {
@@ -62,245 +50,192 @@ function loadWidgetApi(): Promise<SCGlobal> {
   return apiPromise;
 }
 
-const fmt = (ms: number) => {
-  if (!Number.isFinite(ms) || ms <= 0) return "00:00";
-  const s = Math.floor(ms / 1000);
-  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+const WIDGET_OPTS = {
+  auto_play: true,
+  hide_related: true,
+  show_comments: false,
+  show_user: true,
+  show_reposts: false,
+  show_teaser: false,
+  visual: false,
+  color: "#bff851",
 };
 
-const BARS = 72;
-
 /**
- * NOW PLAYING dock.
- * The official SoundCloud widget is always visible inside the dock (their player,
- * their attribution). Our controls talk to it through SoundCloud's Widget API, so
- * PLAY/PAUSE, time and seek are real. The waveform is a visual only — labelled so.
- * If the API can't load, our controls hide and the official player still works.
+ * RADIO GRUVINK — a mini MP3-style player: ◀◀  ▶/❚❚  ▶▶
+ * Plays the collective's own SoundCloud sessions through the OFFICIAL SoundCloud
+ * mini player (20px, always visible = their attribution). Starts on today's
+ * session and runs continuously: when a session ends, the next one loads.
+ * Clicking any row in SOUNDS / EVENTOS jumps the radio to that session.
  */
 export function Player() {
-  const [item, setItem] = useState<MusicItem | null>(null);
-  const [min, setMin] = useState(false);
-  const [api, setApi] = useState<"idle" | "ready" | "failed">("idle");
+  const [started, setStarted] = useState(false);
+  const [index, setIndex] = useState(-1);
+  const [single, setSingle] = useState<MusicItem | null>(null); // item outside SESSIONS
   const [playing, setPlaying] = useState(false);
-  const [pos, setPos] = useState(0);
   const [rel, setRel] = useState(0);
-  const [dur, setDur] = useState(0);
-  const [sound, setSound] = useState<{ title: string; artist: string; url?: string } | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [firstUrl, setFirstUrl] = useState<string | null>(null);
   const iframe = useRef<HTMLIFrameElement>(null);
   const widget = useRef<SCWidget | null>(null);
+  const idxRef = useRef(-1);
+  idxRef.current = index;
 
-  const current = useRef<MusicItem | null>(null);
-  current.current = item;
-  useEffect(
-    () =>
+  const current: MusicItem | null = single ?? (index >= 0 ? SESSIONS[index] : null);
+
+  // load an item: first time → create the iframe; afterwards → widget.load (keeps the same player)
+  const loadItem = useCallback((item: MusicItem) => {
+    if (!item.url) return;
+    setRel(0);
+    if (widget.current) {
+      widget.current.load(item.url, WIDGET_OPTS);
+    } else {
+      setFirstUrl(item.url);
+    }
+    setStarted(true);
+  }, []);
+
+  const go = useCallback(
+    (i: number) => {
+      if (!SESSIONS.length) return;
+      const n = ((i % SESSIONS.length) + SESSIONS.length) % SESSIONS.length;
+      setSingle(null);
+      setIndex(n);
+      loadItem(SESSIONS[n]);
+    },
+    [loadItem],
+  );
+
+  const next = useCallback(() => go((idxRef.current < 0 ? todayIndex() : idxRef.current) + 1), [go]);
+  const prev = useCallback(() => go((idxRef.current < 0 ? todayIndex() : idxRef.current) - 1), [go]);
+
+  const toggle = () => {
+    if (!started) return go(todayIndex());
+    widget.current?.toggle();
+  };
+
+  // events from the rest of the page
+  useEffect(() => {
+    const offs = [
+      on("radio-start", () => go(todayIndex())),
       on("play", (p) => {
         const m = p as MusicItem;
-        // same row again → toggle instead of reloading
-        if (current.current?.id === m.id && widget.current) widget.current.toggle();
-        else setItem(m);
-        setMin(false);
+        const i = SESSIONS.findIndex((s) => s.id === m.id || (!!m.url && s.url === m.url));
+        if (i === idxRef.current && widget.current && !single) return widget.current.toggle();
+        if (i >= 0) go(i);
+        else {
+          setSingle(m);
+          loadItem(m);
+        }
       }),
-    [],
-  );
-  useEffect(() => on("player-min", (v) => setMin(!!v)), []);
+    ];
+    return () => offs.forEach((o) => o());
+  }, [go, loadItem, single]);
 
-  // (re)bind the Widget API every time a new iframe mounts
+  // bind the Widget API once, when the iframe first loads
   const bind = useCallback(() => {
     const el = iframe.current;
-    if (!el) return;
-    setApi("idle");
-    setPlaying(false);
-    setPos(0);
-    setRel(0);
-    setDur(0);
-    setSound(null);
+    if (!el || widget.current) return;
     loadWidgetApi()
       .then((SC) => {
-        if (iframe.current !== el) return;
         const w = SC.Widget(el);
         widget.current = w;
         const E = SC.Widget.Events;
-        const refresh = () => {
-          w.getDuration((d) => setDur(d));
-          w.getCurrentSound((s) =>
-            setSound(
-              s
-                ? { title: s.title ?? "", artist: s.user?.username ?? "", url: s.permalink_url }
-                : null,
-            ),
-          );
-        };
-        w.bind(E.READY, () => {
-          setApi("ready");
-          refresh();
-        });
-        w.bind(E.PLAY, () => {
-          setPlaying(true);
-          refresh();
-        });
+        w.bind(E.PLAY, () => setPlaying(true));
         w.bind(E.PAUSE, () => setPlaying(false));
-        w.bind(E.FINISH, () => setPlaying(false));
-        w.bind(E.PLAY_PROGRESS, (e) => {
-          if (!e) return;
-          setPos(e.currentPosition);
-          setRel(e.relativePosition);
+        w.bind(E.PLAY_PROGRESS, (e) => e && setRel(e.relativePosition));
+        // continuous sessions: when one ends, the next one starts
+        w.bind(E.FINISH, () => {
+          setPlaying(false);
+          next();
         });
       })
-      .catch(() => setApi("failed"));
-  }, []);
+      .catch(() => setFailed(true));
+  }, [next]);
 
-  // broadcast to HUD + track list
+  // broadcast for the HUD / track list
   useEffect(() => {
-    emit("player", item ? { id: item.id, playing, title: sound?.title || item.title } : { playing: false, title: "" });
-  }, [item, playing, sound]);
+    emit(
+      "player",
+      current
+        ? { id: current.id, playing, title: `${current.title}${current.artist ? ` / ${current.artist}` : ""}` }
+        : { playing: false, title: "" },
+    );
+  }, [current, playing]);
 
-  // keyboard: K / space-less toggle when dock open
+  // keyboard: K = play/pause, J / L = previous / next
   useEffect(() => {
-    if (!item) return;
     const key = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (t && /INPUT|TEXTAREA|SELECT/.test(t.tagName)) return;
-      if (e.key.toLowerCase() === "k" && widget.current) widget.current.toggle();
+      const k = e.key.toLowerCase();
+      if (k === "k") toggle();
+      if (k === "l" && started) next();
+      if (k === "j" && started) prev();
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [item]);
-
-  const bars = useMemo(() => {
-    const seed = (sound?.title || item?.id || "sb").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-    const r = mulberry(seed);
-    return Array.from({ length: BARS }, (_, i) => {
-      const env = Math.sin((i / BARS) * Math.PI) * 0.5 + 0.5;
-      return 0.18 + r() * 0.55 * env + (i % 8 === 0 ? 0.25 : 0);
-    });
-  }, [sound?.title, item?.id]);
-
-  const seek = (e: RME<HTMLDivElement>) => {
-    if (!widget.current || !dur) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    widget.current.seekTo(((e.clientX - r.left) / r.width) * dur);
-  };
-  const seekKey = (e: RKE<HTMLDivElement>) => {
-    if (!widget.current || !dur) return;
-    if (e.key === "ArrowRight") widget.current.seekTo(Math.min(dur, pos + 10000));
-    if (e.key === "ArrowLeft") widget.current.seekTo(Math.max(0, pos - 10000));
-  };
-
-  const close = () => {
-    widget.current?.pause();
-    widget.current = null;
-    setItem(null);
-    setPlaying(false);
-  };
-
-  const ready = api === "ready";
+  });
 
   return (
-    <aside
-      className={`player ${item ? "is-open" : ""} ${min ? "is-min" : ""}`}
-      aria-label="Music player"
-      aria-hidden={!item}
-    >
-      {item && (
-        <div className="player__inner">
-          <div className="player__hud">
-            <div className="player__top mono">
-              <span>GRUVINK</span>
-              <span className={`player__state ${playing ? "is-on" : ""}`}>
-                <i aria-hidden="true" /> {playing ? "NOW PLAYING" : ready ? "READY" : api === "failed" ? "OFFLINE" : "LINKING…"}
-              </span>
-              <span className="player__btns">
-                <button onClick={() => setMin((v) => !v)} aria-label={min ? "Expand player" : "Minimise player"}>
-                  {min ? "▢" : "—"}
-                </button>
-                <button onClick={close} aria-label="Close player">
-                  ✕
-                </button>
-              </span>
-            </div>
-
-            <div className="player__rule" aria-hidden="true" />
-
-            <div className="player__title">
-              <span className="mono player__src">
-                {KIND_LABEL[item.kind]} · {item.title}
-              </span>
-              <strong>{sound?.title || item.title}</strong>
-              {sound?.artist && <span className="mono player__by">BY {sound.artist.toUpperCase()}</span>}
-            </div>
-
-            {ready && (
-              <>
-                <div className="player__time mono">
-                  <span>{fmt(pos)}</span>
-                  <span className="player__line" aria-hidden="true">
-                    <span style={{ transform: `scaleX(${rel})` }} />
-                  </span>
-                  <span>{fmt(dur)}</span>
-                </div>
-                <div
-                  className={`wave ${playing ? "is-on" : ""}`}
-                  role="slider"
-                  tabIndex={0}
-                  aria-label="Seek (arrow keys ±10s)"
-                  aria-valuemin={0}
-                  aria-valuemax={Math.round(dur / 1000)}
-                  aria-valuenow={Math.round(pos / 1000)}
-                  onClick={seek}
-                  onKeyDown={seekKey}
-                  data-cursor="hover"
-                >
-                  {bars.map((h, i) => (
-                    <i
-                      key={i}
-                      className={i / BARS <= rel ? "is-past" : ""}
-                      style={{ "--h": h, "--d": `${(i % 9) * 70}ms` } as CSSProperties}
-                    />
-                  ))}
-                  <span className="wave__tag mono">WAVE / VISUAL</span>
-                </div>
-                <div className="player__ctrl mono">
-                  <button onClick={() => widget.current?.prev()} aria-label="Previous track">
-                    ◀◀
-                  </button>
-                  <button className="player__play" onClick={() => widget.current?.toggle()} data-cursor="play" data-cursor-label={playing ? "PAUSE" : "PLAY"}>
-                    {playing ? "PAUSE" : "PLAY"}
-                  </button>
-                  <button onClick={() => widget.current?.next()} aria-label="Next track">
-                    ▶▶
-                  </button>
-                  <a href={sound?.url || item.url} target="_blank" rel="noopener noreferrer" data-cursor="open">
-                    SOUNDCLOUD ↗
-                  </a>
-                </div>
-              </>
-            )}
-            {api === "failed" && (
-              <p className="player__fail mono">
-                Custom controls unavailable here — use the SoundCloud player or{" "}
-                <a href={item.url} target="_blank" rel="noopener noreferrer">
-                  open it on SoundCloud ↗
-                </a>
-              </p>
-            )}
-          </div>
-
-          <div
-            className="player__embed"
-            onPointerEnter={() => document.documentElement.classList.add("cursor-out")}
-            onPointerLeave={() => document.documentElement.classList.remove("cursor-out")}
-          >
-            <iframe
-              key={item.id}
-              ref={iframe}
-              title={`SoundCloud player — ${item.title}`}
-              src={widgetSrc(item.url!)}
-              allow="autoplay; encrypted-media"
-              loading="eager"
-              onLoad={bind}
-            />
-          </div>
+    <aside className={`radio ${started ? "is-on" : ""} ${playing ? "is-playing" : ""}`} aria-label="Radio GRUVINK">
+      <div className="radio__bar">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="radio__icon" src={SITE.icon} alt="" aria-hidden="true" />
+        <div className="radio__info mono">
+          <span className="radio__label">{started ? (playing ? "SONANDO" : "EN PAUSA") : "RADIO GRUVINK"}</span>
+          <span className="radio__title">
+            {current ? `${current.title}${current.artist ? ` / ${current.artist}` : ""}` : "SESIONES · PODCAST · KORA"}
+          </span>
         </div>
+        <div className="radio__ctrl">
+          <button onClick={prev} aria-label="Sesión anterior" data-cursor="hover" disabled={!started}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 5h2v14H6zM20 5v14L9 12z" />
+            </svg>
+          </button>
+          <button className="radio__play" onClick={toggle} aria-label={playing ? "Pausa" : "Play"} data-cursor="hover">
+            {playing ? (
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 4v16l13-8z" />
+              </svg>
+            )}
+          </button>
+          <button onClick={next} aria-label="Siguiente sesión" data-cursor="hover" disabled={!started}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M16 5h2v14h-2zM4 5v14l11-7z" />
+            </svg>
+          </button>
+        </div>
+        <span className="radio__progress" aria-hidden="true">
+          <span style={{ transform: `scaleX(${rel})` }} />
+        </span>
+      </div>
+
+      {firstUrl && (
+        <div
+          className="radio__embed"
+          onPointerEnter={() => document.documentElement.classList.add("cursor-out")}
+          onPointerLeave={() => document.documentElement.classList.remove("cursor-out")}
+        >
+          <iframe
+            ref={iframe}
+            title="SoundCloud — Radio GRUVINK"
+            src={widgetSrc(firstUrl)}
+            allow="autoplay; encrypted-media"
+            height={20}
+            onLoad={bind}
+          />
+        </div>
+      )}
+      {failed && current?.url && (
+        <a className="radio__fail mono" href={current.url} target="_blank" rel="noopener noreferrer">
+          ABRIR EN SOUNDCLOUD ↗
+        </a>
       )}
     </aside>
   );

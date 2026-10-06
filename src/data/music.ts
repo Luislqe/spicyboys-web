@@ -39,10 +39,26 @@ export const MUSIC: MusicItem[] = [
 ];
 
 /**
- * Track offered when entering the site ("ENTRAR CON SONIDO").
- * By default the newest item in MUSIC. Set to null to disable the sound gate.
+ * RADIO GRUVINK — the mini player that starts from the entry page.
+ * SESSIONS = every item above with a SoundCloud URL, in page order.
+ * Each day the radio starts on a different session (rotates at midnight,
+ * Barcelona time) and then keeps going: when one ends, the next one starts.
  */
-export const INTRO_TRACK: MusicItem | null = MUSIC[0] ?? null;
+export const SESSIONS: MusicItem[] = MUSIC.filter((m) => !!m.url);
+
+/** Day number in Europe/Madrid, so the "session of the day" flips at local midnight. */
+function madridDay(d = new Date()) {
+  const ymd = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(d); // YYYY-MM-DD
+  return Math.floor(Date.parse(`${ymd}T00:00:00Z`) / 86_400_000);
+}
+
+/** Index in SESSIONS of today's session. */
+export function todayIndex(d = new Date()) {
+  return SESSIONS.length ? madridDay(d) % SESSIONS.length : -1;
+}
+
+/** Kept for compatibility: today's session. */
+export const INTRO_TRACK: MusicItem | null = SESSIONS[0] ?? null;
 
 /** The KORA 001 playlist (used by the KORA section's "listen" button). */
 export const KORA_PLAYLIST: MusicItem = {
