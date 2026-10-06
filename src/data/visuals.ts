@@ -10,6 +10,9 @@
  *        p. ej. "/visuals/kora-001.jpg".
  * Sin url, la tarjeta sale como "PRÓXIMAMENTE".
  */
+/** Styles for the generated placeholder art (src/lib/generative.ts). */
+export type VisualStyle = "strobe" | "floor" | "rings" | "crowd" | "scan" | "type";
+
 export type Platform = "instagram" | "youtube" | "facebook" | "tiktok" | "soundcloud";
 
 export type Video = {
