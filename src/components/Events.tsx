@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { SITE } from "@/data/site";
-import { dateParts, pastEvents, upcomingEvents, type GvkEvent } from "@/data/events";
-import { SESSIONS, type MusicItem } from "@/data/music";
-import { clamp, emit, env, lerp, onTick, rectOf, state } from "@/lib/engine";
+import Link from "next/link";
+import { pastEvents, upcomingEvents } from "@/data/events";
+import { clamp, env, lerp, onTick, rectOf, state } from "@/lib/engine";
+import { EventRow } from "./EventRow";
 
 /**
  * EVENTOS — the only lime section: upcoming and past GRUVINK nights.
@@ -112,23 +113,6 @@ export function Events() {
   const nextWord = next ? next.name : "SOON";
   const under = [nextWord, ...(next?.lineup ?? []), "GRUVINK", "BARCELONA"].join(" ● ") + " ● ";
 
-  // "ESCUCHAR SETS": jump the radio to the first set of that night (then it keeps going)
-  const listen = (e: GvkEvent) => {
-    const first = SESSIONS.find((m) => m.title === e.name);
-    if (first) return emit("play", first);
-    if (e.sets)
-      emit("play", {
-        id: `event-${e.id}`,
-        title: e.name,
-        artist: "SETS",
-        kind: "playlist",
-        year: e.date?.slice(0, 4) ?? e.when ?? "",
-        url: e.sets,
-        meta: e.lineup.join(" · "),
-        seed: 1,
-      } satisfies MusicItem);
-  };
-
   return (
     <section
       ref={section}
@@ -152,7 +136,6 @@ export function Events() {
           <span className="connected__kicker">EVENTOS</span>
         </h2>
 
-        {/* ── PRÓXIMOS */}
         <div className="ev-block">
           <h3 className="ev-label mono">
             <i aria-hidden="true" /> PRÓXIMOS
@@ -175,8 +158,10 @@ export function Events() {
                 <span className="hint-touch">DRAG TO REVEAL</span>
               </span>
             </div>
-
             <ul className="ev-list">
+              {upcoming.slice(0, 2).map((e) => (
+                <EventRow key={e.id} e={e} />
+              ))}
               {upcoming.length === 0 && (
                 <li className="ev-row ev-row--empty">
                   <span className="ev-date mono">TBA</span>
@@ -184,89 +169,25 @@ export function Events() {
                   <span className="ev-info mono">SE ANUNCIAN EN {SITE.links.instagramHandle.toUpperCase()}</span>
                 </li>
               )}
-              {upcoming.map((e) => {
-                const d = dateParts(e);
-                return (
-                  <li key={e.id} className="ev-row">
-                    <span className="ev-date mono">
-                      {d ? (
-                        <>
-                          <b>{d.day}</b> {d.month}
-                        </>
-                      ) : (
-                        e.when ?? "TBA"
-                      )}
-                    </span>
-                    <span className="ev-name">{e.name}</span>
-                    <span className="ev-info mono">
-                      {[e.venue ?? "LUGAR TBA", e.city].filter(Boolean).join(" · ")}
-                      <br />
-                      {e.lineup.length ? e.lineup.join(" · ") : "LINE UP TBA"}
-                    </span>
-                    {e.tickets ? (
-                      <a className="connected__cta mono" href={e.tickets} target="_blank" rel="noopener noreferrer" data-cursor="open">
-                        <span>ENTRADAS</span>
-                        <i aria-hidden="true">↗</i>
-                      </a>
-                    ) : (
-                      <a
-                        className="connected__cta connected__cta--ghost mono"
-                        href={SITE.links.instagram}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        data-cursor="open"
-                      >
-                        <span>AVISOS EN {SITE.links.instagramHandle.toUpperCase()}</span>
-                        <i aria-hidden="true">↗</i>
-                      </a>
-                    )}
-                  </li>
-                );
-              })}
             </ul>
           </div>
         </div>
 
-        {/* ── PASADOS */}
         <div className="ev-block">
           <h3 className="ev-label mono">
             <i aria-hidden="true" /> PASADOS
           </h3>
           <ul className="ev-list ev-list--past">
-            {past.map((e) => {
-              const d = dateParts(e);
-              return (
-                <li key={e.id} className="ev-row">
-                  <span className="ev-date mono">
-                    {d ? (
-                      <>
-                        <b>{d.day}</b> {d.month}
-                      </>
-                    ) : (
-                      e.when ?? ""
-                    )}
-                  </span>
-                  <span className="ev-name">{e.name}</span>
-                  <span className="ev-info mono">
-                    {e.lineup.map((l) => (
-                      <span key={l} className="ev-act">
-                        ✕ {l}
-                      </span>
-                    ))}
-                  </span>
-                  {e.sets ? (
-                    <button className="connected__cta mono" onClick={() => listen(e)} data-cursor="play">
-                      <span>ESCUCHAR SETS</span>
-                      <i aria-hidden="true">▶</i>
-                    </button>
-                  ) : (
-                    <span />
-                  )}
-                </li>
-              );
-            })}
+            {past.slice(0, 3).map((e) => (
+              <EventRow key={e.id} e={e} />
+            ))}
           </ul>
         </div>
+
+        <Link href="/eventos" className="ev-all" data-cursor="open" data-cursor-label="VER">
+          <span>VER TODOS LOS EVENTOS</span>
+          <i aria-hidden="true">→</i>
+        </Link>
       </div>
     </section>
   );

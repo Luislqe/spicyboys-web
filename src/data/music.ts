@@ -21,21 +21,22 @@ export type MusicItem = {
   meta: string;
   /** seed for the generated cover (used when no `cover`) */
   seed: number;
+  /** cover image — the session artwork from SoundCloud (or your own file) */
   cover?: string;
 };
 
 const SC = "https://soundcloud.com/gruvink";
 
 export const MUSIC: MusicItem[] = [
-  { id: "p26", title: "PODCAST 26", artist: "4R15", kind: "podcast", year: "2026", url: `${SC}/podcast-26-4r15`, meta: "AUG 2026", seed: 26 },
-  { id: "p25", title: "PODCAST 25", artist: "POL VERDÉS", kind: "podcast", year: "2026", url: `${SC}/podcast-25-pol-verdes`, meta: "JUL 2026", seed: 25 },
-  { id: "p23", title: "PODCAST 23", artist: "ALBERT VERYN", kind: "podcast", year: "2026", url: `${SC}/podcast-23-albert-veryn`, meta: "MAY 2026", seed: 23 },
-  { id: "p22", title: "PODCAST 22", artist: "ROUXXE", kind: "podcast", year: "2026", url: `${SC}/podcast-22-rouxxe`, meta: "MAY 2026", seed: 22 },
-  { id: "p21", title: "PODCAST 21", artist: "MEDINA", kind: "podcast", year: "2026", url: `${SC}/podcast-21-medina`, meta: "MAY 2026", seed: 21 },
-  { id: "p20", title: "PODCAST 20", artist: "BRANDO", kind: "podcast", year: "2026", url: `${SC}/podcast-20-brando`, meta: "MAR 2026", seed: 20 },
-  { id: "k-avraxas", title: "KORA 001", artist: "AVRAXAS B2B DBØ", kind: "set", year: "2026", url: `${SC}/avraxas-b2b-dbo-1`, meta: "VINYL ONLY", seed: 11 },
-  { id: "k-chamox", title: "KORA 001", artist: "CHAMÓX", kind: "set", year: "2026", url: `${SC}/kora-001-chamox`, meta: "LIVE AT KORA", seed: 12 },
-  { id: "k-nandes", title: "KORA 001", artist: "NANDES", kind: "set", year: "2026", url: `${SC}/kora-001-nandes`, meta: "LIVE AT KORA", seed: 13 },
+  { id: "p26", title: "PODCAST 26", artist: "4R15", kind: "podcast", year: "2026", url: `${SC}/podcast-26-4r15`, meta: "AUG 2026", seed: 26, cover: "https://i1.sndcdn.com/artworks-dVgz7lCzTldI2r0h-5XLdrg-t500x500.png" },
+  { id: "p25", title: "PODCAST 25", artist: "POL VERDÉS", kind: "podcast", year: "2026", url: `${SC}/podcast-25-pol-verdes`, meta: "JUL 2026", seed: 25, cover: "https://i1.sndcdn.com/artworks-uVa9XZNjaDkEqGAV-G9z43w-t500x500.jpg" },
+  { id: "p23", title: "PODCAST 23", artist: "ALBERT VERYN", kind: "podcast", year: "2026", url: `${SC}/podcast-23-albert-veryn`, meta: "MAY 2026", seed: 23, cover: "https://i1.sndcdn.com/artworks-Hz16IDRCsikwCZOD-titPMA-t500x500.png" },
+  { id: "p22", title: "PODCAST 22", artist: "ROUXXE", kind: "podcast", year: "2026", url: `${SC}/podcast-22-rouxxe`, meta: "MAY 2026", seed: 22, cover: "https://i1.sndcdn.com/artworks-yRpof1J74Hee9qqK-Rm76mA-t500x500.png" },
+  { id: "p21", title: "PODCAST 21", artist: "MEDINA", kind: "podcast", year: "2026", url: `${SC}/podcast-21-medina`, meta: "MAY 2026", seed: 21, cover: "https://i1.sndcdn.com/artworks-ZsimY2GOkDB1hBKv-0kMwiw-t500x500.png" },
+  { id: "p20", title: "PODCAST 20", artist: "BRANDO", kind: "podcast", year: "2026", url: `${SC}/podcast-20-brando`, meta: "MAR 2026", seed: 20, cover: "https://i1.sndcdn.com/artworks-yoQAVHYzDylyCBsy-J8hQlw-t500x500.png" },
+  { id: "k-avraxas", title: "KORA 001", artist: "AVRAXAS B2B DBØ", kind: "set", year: "2026", url: `${SC}/avraxas-b2b-dbo-1`, meta: "VINYL ONLY", seed: 11, cover: "https://i1.sndcdn.com/artworks-gAv6caQuPZriYPWp-pEzO1w-t500x500.png" },
+  { id: "k-chamox", title: "KORA 001", artist: "CHAMÓX", kind: "set", year: "2026", url: `${SC}/kora-001-chamox`, meta: "LIVE AT KORA", seed: 12, cover: "https://i1.sndcdn.com/artworks-8Ze5IfPl3Fq5ebQm-Ws1HaA-t500x500.png" },
+  { id: "k-nandes", title: "KORA 001", artist: "NANDES", kind: "set", year: "2026", url: `${SC}/kora-001-nandes`, meta: "LIVE AT KORA", seed: 13, cover: "https://i1.sndcdn.com/artworks-dK5s0GWQtkt7VSc2-4FBCUw-t500x500.png" },
 ];
 
 /**

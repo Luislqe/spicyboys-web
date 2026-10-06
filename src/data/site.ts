@@ -28,10 +28,11 @@ export const SITE = {
     "GRUVINK — colectivo de música electrónica de Barcelona. Podcasts, fiestas KORA y artistas como SPICY BOYS.",
 } as const;
 
-export const NAV = [
+/** Main menu. `page` items open their own page; the rest scroll on the home page. */
+export const NAV: { id: string; label: string; idx: string; page?: string }[] = [
   { id: "sounds", label: "SOUNDS", idx: "01" },
   { id: "artists", label: "ARTISTS", idx: "02" },
-  { id: "events", label: "EVENTOS", idx: "03" },
-  { id: "visuals", label: "VISUALS", idx: "04" },
+  { id: "events", label: "EVENTOS", idx: "03", page: "/eventos" },
+  { id: "visuals", label: "VIDEOS", idx: "04" },
   { id: "follow", label: "FOLLOW", idx: "05" },
-] as const;
+];

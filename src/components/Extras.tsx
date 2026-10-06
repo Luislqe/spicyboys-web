@@ -60,7 +60,11 @@ export function Extras() {
       if (k === "g") setGrid((g) => !g);
       if (k === "?") show(answers[(Math.random() * answers.length) | 0]);
       const n = Number(k);
-      if (n >= 1 && n <= NAV.length) scrollToId(NAV[n - 1].id);
+      if (n >= 1 && n <= NAV.length) {
+        const item = NAV[n - 1];
+        if (document.getElementById(item.id) && !item.page) scrollToId(item.id);
+        else window.location.href = item.page ?? `/#${item.id}`;
+      }
     };
     window.addEventListener("keydown", key);
 

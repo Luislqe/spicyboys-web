@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent as RME } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { NAV, SITE } from "@/data/site";
 import { emit, on, onTick, scramble, scrollToId, state } from "@/lib/engine";
 
@@ -67,41 +69,47 @@ export function HUD() {
     return () => window.removeEventListener("keydown", esc);
   }, [menu]);
 
-  const go = (id: string) => (e: RME) => {
-    e.preventDefault();
+  const path = usePathname() ?? "/";
+  const onHome = path === "/";
+  const hrefFor = (n: (typeof NAV)[number]) => n.page ?? (onHome ? `#${n.id}` : `/#${n.id}`);
+  // on the home page, section links scroll smoothly; everything else is a normal (client-side) link
+  const go = (n: (typeof NAV)[number]) => (e: RME) => {
     setMenu(false);
-    scrollToId(id);
-    history.replaceState(null, "", `#${id}`);
+    if (n.page || !onHome) return;
+    e.preventDefault();
+    scrollToId(n.id);
+    history.replaceState(null, "", `#${n.id}`);
   };
 
   // hidden detail: tap the logo 3× quickly
   const logoTap = (e: RME) => {
+    if (!onHome) return; // let the link take you home
     e.preventDefault();
     const t = performance.now();
     taps.current = [...taps.current.filter((x) => t - x < 700), t];
     if (taps.current.length >= 3) {
       taps.current = [];
-      emit("toast", "GVK—SYS v3.0 · BUILT IN BCN · TYPE “RAVE”");
+      emit("toast", "GVK—SYS v3.3 · BUILT IN BCN · TYPE “RAVE”");
     } else scrollToId("top");
   };
 
   return (
     <>
-      <a className="skip mono" href="#sounds">
+      <a className="skip mono" href={onHome ? "#sounds" : "/#sounds"}>
         Skip to music
       </a>
       <header className="hud">
-        <a href="#top" className="hud__logo" onClick={logoTap} aria-label="GRUVINK — back to top">
+        <Link href="/" className="hud__logo" onClick={logoTap} aria-label="GRUVINK — inicio">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="hud__logo-icon" src={SITE.icon} alt="" width={28} height={28} />
           <span className="hud__logo-sys mono">GVK—SYS</span>
-        </a>
+        </Link>
         <nav className="hud__nav mono" aria-label="Sections">
           {NAV.map((n, i) => (
-            <a key={n.id} href={`#${n.id}`} onClick={go(n.id)} className="hud__link">
+            <Link key={n.id} href={hrefFor(n)} onClick={go(n)} className="hud__link">
               <span className="hud__key">{i + 1}</span>
               <span className="hud__link-text">{n.label}</span>
-            </a>
+            </Link>
           ))}
         </nav>
         <div className="hud__right mono">
@@ -153,10 +161,10 @@ export function HUD() {
           <ul className="menu__list">
             {NAV.map((n, i) => (
               <li key={n.id} style={{ "--i": i } as CSSProperties}>
-                <a href={`#${n.id}`} onClick={go(n.id)} tabIndex={menu ? 0 : -1}>
+                <Link href={hrefFor(n)} onClick={go(n)} tabIndex={menu ? 0 : -1}>
                   <span className="mono">{n.idx}</span>
                   {n.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

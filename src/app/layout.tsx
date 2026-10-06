@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import Script from "next/script";
 import { Archivo, JetBrains_Mono } from "next/font/google";
+import { Shell } from "@/components/Shell";
 import { SITE } from "@/data/site";
 import "./globals.css";
 
@@ -70,7 +71,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Script id="sb-js-flag" strategy="beforeInteractive">
           {"document.documentElement.classList.add('js')"}
         </Script>
-        {children}
+        <Shell>{children}</Shell>
       </body>
     </html>
   );

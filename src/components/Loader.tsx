@@ -77,49 +77,51 @@ export function Loader() {
       <div className="entry">
         <div className="entry__top mono">
           <span>GVK—SYS / RADIO GRUVINK</span>
-          <span>v3.2</span>
+          <span>v3.3</span>
         </div>
 
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="entry__logo" src={SITE.logo} alt="GRUVINK" />
+        <div className="entry__center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="entry__logo" src={SITE.logo} alt="GRUVINK" />
 
-        {phase === "gate" ? (
-          <div className="entry__choice">
-            <button
-              ref={primary}
-              className="entry__on"
-              onClick={() => enter(true)}
-              data-cursor="play"
-              data-cursor-label="ON"
-              aria-label="Entrar con música"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="entry__icon" src={SITE.icon} alt="" />
-              <span className="entry__on-label mono">
-                <span className="entry__eq" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
+          {phase === "gate" ? (
+            <div className="entry__choice">
+              <button
+                ref={primary}
+                className="entry__on"
+                onClick={() => enter(true)}
+                data-cursor="play"
+                data-cursor-label="ON"
+                aria-label="Entrar con música"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="entry__icon" src={SITE.icon} alt="" />
+                <span className="entry__on-label mono">
+                  <span className="entry__eq" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  MÚSICA ON
                 </span>
-                MÚSICA ON
-              </span>
-            </button>
-            <button className="entry__off mono" onClick={() => enter(false)} data-cursor="hover">
-              MÚSICA OFF — ENTRAR EN SILENCIO
-            </button>
-            {today && (
-              <p className="entry__today mono">
-                SESIÓN DE HOY · {today.title}
-                {today.artist ? ` / ${today.artist}` : ""}
-              </p>
-            )}
-          </div>
-        ) : (
-          <div className="entry__bar mono">
-            <span ref={bar}>{"░".repeat(BLOCKS)}</span>
-          </div>
-        )}
+              </button>
+              <button className="entry__off mono" onClick={() => enter(false)} data-cursor="hover">
+                MÚSICA OFF — ENTRAR EN SILENCIO
+              </button>
+              {today && (
+                <p className="entry__today mono">
+                  SESIÓN DE HOY · {today.title}
+                  {today.artist ? ` / ${today.artist}` : ""}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="entry__bar mono">
+              <span ref={bar}>{"░".repeat(BLOCKS)}</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

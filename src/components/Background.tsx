@@ -12,7 +12,7 @@ import { emit, env, on, onTick, state } from "@/lib/engine";
  *  5. scanlines + vignette (pure CSS)
  * Canvas pauses off-tab (shared engine loop) and drops to 24 particles on mobile.
  */
-export function Background() {
+export function Background({ route = "/" }: { route?: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const grid = useRef<HTMLDivElement>(null);
   const grain = useRef<HTMLDivElement>(null);
@@ -50,7 +50,7 @@ export function Background() {
     );
     sections.forEach((s) => io.observe(s));
     return () => io.disconnect();
-  }, []);
+  }, [route]);
 
   // particles
   useEffect(() => {
