@@ -1,84 +1,41 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef } from "react";
 import { SITE } from "@/data/site";
-import { clamp, env, invalidateRects, lerp, onTick, rectOf, state } from "@/lib/engine";
+import { clamp, env, lerp, onTick, rectOf, state } from "@/lib/engine";
 
-const LINES = ["SPICY", "BOYS"] as const;
-
-function Lines() {
-  let k = 0;
+/** The wordmark split in two halves (they tear apart on scroll). */
+function Mark({ src }: { src: string }) {
   return (
     <>
-      {LINES.map((word, li) => (
-        <span key={word} className={`hero__line hero__line--${li + 1}`}>
-          {Array.from(word).map((c) => {
-            const i = k++;
-            return (
-              <span key={i} className="hero__ch" style={{ "--i": i } as CSSProperties}>
-                <span className="hero__ch-in">{c}</span>
-              </span>
-            );
-          })}
-        </span>
-      ))}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="hero__half hero__half--l" src={src} alt="" draggable={false} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="hero__half hero__half--r" src={src} alt="" draggable={false} />
     </>
   );
 }
 
 /**
- * HERO — "thermal lens".
- * Two identical type layers. The top one (signal red, scanlined) is clipped to a
- * circle that follows the pointer, like a heat camera passing over the logo.
- * Letters near the pointer stretch; scroll tears the two words apart.
+ * HERO — the GRUVINK wordmark with an "inverted signal" lens.
+ * Base layer: the real logo. Lens layer: the same logo with lime/violet swapped
+ * and scanlines, clipped to a circle that follows the pointer (finger on touch).
+ * Scroll tears the wordmark in two; the pointer tilts it in 3D.
  */
 export function Hero() {
   const section = useRef<HTMLElement>(null);
-  const title = useRef<HTMLHeadingElement>(null);
-  const lens = useRef<HTMLSpanElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const lens = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const h1 = title.current;
+    const st = stage.current;
     const sec = section.current;
     const lensEl = lens.current;
-    if (!h1 || !sec || !lensEl) return;
+    if (!st || !sec || !lensEl) return;
+    const halves = Array.from(st.querySelectorAll<HTMLElement>(".hero__half"));
+    const lefts = halves.filter((h) => h.classList.contains("hero__half--l"));
+    const rights = halves.filter((h) => h.classList.contains("hero__half--r"));
 
-    const layers = Array.from(h1.querySelectorAll<HTMLElement>(".hero__layer"));
-    const lines = layers.map((l) => Array.from(l.querySelectorAll<HTMLElement>(".hero__line")));
-    const chars = layers.map((l) => Array.from(l.querySelectorAll<HTMLElement>(".hero__ch")));
-    let centers: { x: number; y: number; line: number }[] = [];
-
-    // ── fit "SPICY" to the full width, measure letter centres
-    const fit = () => {
-      const base = layers[0];
-      const word = lines[0][0];
-      const avail = h1.clientWidth;
-      h1.style.fontSize = "100px";
-      const w = word.scrollWidth || 1;
-      // fill the width, but never push the words + footer row below the fold (desktop)
-      const byW = (100 * avail) / w;
-      const byH = window.innerWidth > 767 ? (window.innerHeight - 320) / (2 * 0.79) : Infinity;
-      const fs = Math.max(40, Math.min(byW, byH));
-      h1.style.fontSize = `${fs.toFixed(2)}px`;
-      const l2 = lines[0][1];
-      h1.style.setProperty("--boys-w", `${l2.scrollWidth}px`);
-      invalidateRects();
-      centers = chars[0].map((c) => {
-        const line = c.parentElement as HTMLElement;
-        return {
-          x: line.offsetLeft + c.offsetLeft + c.offsetWidth / 2,
-          y: line.offsetTop + c.offsetTop + c.offsetHeight / 2,
-          line: line.classList.contains("hero__line--1") ? 0 : 1,
-        };
-      });
-      void base;
-    };
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(h1);
-    document.fonts?.ready.then(fit).catch(() => {});
-
-    // ── touch: dragging a finger over the logo drives the lens
     let touching = false;
     const touch = (e: TouchEvent) => {
       const t = e.touches[0];
@@ -93,9 +50,9 @@ export function Hero() {
       }
     };
     const touchEnd = () => (touching = false);
-    h1.addEventListener("touchstart", touch, { passive: true });
-    h1.addEventListener("touchmove", touch, { passive: true });
-    h1.addEventListener("touchend", touchEnd, { passive: true });
+    st.addEventListener("touchstart", touch, { passive: true });
+    st.addEventListener("touchmove", touch, { passive: true });
+    st.addEventListener("touchend", touchEnd, { passive: true });
 
     let visible = true;
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
@@ -104,97 +61,69 @@ export function Hero() {
     let lensR = 0;
     let lx = 0;
     let ly = 0;
-    let deformed = true;
+    const tilt = { x: 0, y: 0 };
+    let lastLens = "";
 
     const off = onTick((t) => {
       if (!visible) return;
-      const r = rectOf(h1);
+      const r = rectOf(st);
       const secH = rectOf(sec).height || state.vh;
       const p = env.reduced ? 0 : clamp(state.scroll / (secH * 0.85), 0, 1);
 
-      // pointer (or an idle scanner on touch screens)
       let px = state.sx - r.left;
       let py = state.sy - r.top;
       const inside =
-        state.pointerActive && px > -40 && px < r.width + 40 && py > -40 && py < r.height + 40 && (!env.touch || touching);
+        state.pointerActive && px > -60 && px < r.width + 60 && py > -60 && py < r.height + 60 && (!env.touch || touching);
       if (env.touch && !touching) {
-        px = r.width * (0.5 + 0.45 * Math.sin(t / 1400));
-        py = r.height * (0.5 + 0.3 * Math.sin(t / 900));
+        px = r.width * (0.5 + 0.42 * Math.sin(t / 1500));
+        py = r.height * (0.5 + 0.25 * Math.sin(t / 950));
       }
 
-      // lens
-      const targetR = inside ? Math.min(r.width * 0.16, 260) : env.touch && !env.reduced ? r.width * 0.09 : 0;
+      const targetR = inside ? Math.min(r.width * 0.15, 240) : env.touch && !env.reduced ? r.width * 0.12 : 0;
       lensR = lerp(lensR, targetR, 0.14);
       lx = lerp(lx, px, 0.35);
       ly = lerp(ly, py, 0.35);
-      lensEl.style.clipPath = `circle(${lensR.toFixed(1)}px at ${lx.toFixed(1)}px ${ly.toFixed(1)}px)`;
-      lensEl.style.setProperty("--lx", `${lx.toFixed(1)}px`);
-      lensEl.style.setProperty("--ly", `${ly.toFixed(1)}px`);
-      lensEl.style.setProperty("--lr", `${lensR.toFixed(1)}px`);
-
-      // chromatic split only while scrolling fast (class toggle = no per-frame repaint)
-      const fast = Math.abs(state.velocity) > 14;
-      if (fast !== h1.classList.contains("is-fast")) h1.classList.toggle("is-fast", fast);
+      // only touch the lens when it is (or just was) visible → no idle repaints
+      const lensKey = lensR < 0.5 ? "off" : `${lensR.toFixed(0)}|${lx.toFixed(0)}|${ly.toFixed(0)}`;
+      if (lensKey !== lastLens) {
+        lastLens = lensKey;
+        lensEl.style.visibility = lensKey === "off" ? "hidden" : "visible";
+        if (lensKey !== "off") {
+          lensEl.style.clipPath = `circle(${lensR.toFixed(1)}px at ${lx.toFixed(1)}px ${ly.toFixed(1)}px)`;
+          lensEl.style.setProperty("--lx", `${lx.toFixed(1)}px`);
+          lensEl.style.setProperty("--ly", `${ly.toFixed(1)}px`);
+          lensEl.style.setProperty("--lr", `${lensR.toFixed(1)}px`);
+        }
+      }
 
       if (env.reduced) return;
-
-      // lines: parallax + scroll tear
-      const vw = state.vw;
-      const tx1 = -p * vw * 0.22 - state.nx * 14;
-      const tx2 = p * vw * 0.22 + state.nx * 14;
-      const ty1 = p * state.vh * 0.22 - state.ny * 8;
-      const ty2 = p * state.vh * 0.08 + state.ny * 8;
-      const sc = 1 + p * 0.18;
-      const l1 = `translate3d(${tx1.toFixed(1)}px, ${ty1.toFixed(1)}px, 0) scale(${sc.toFixed(3)})`;
-      const l2 = `translate3d(${tx2.toFixed(1)}px, ${ty2.toFixed(1)}px, 0) scale(${sc.toFixed(3)})`;
-      for (const ls of lines) {
-        ls[0].style.transform = l1;
-        ls[1].style.transform = l2;
-      }
-      h1.style.opacity = (1 - p * 0.85).toFixed(3);
-
-      // per-letter deformation near the pointer
-      const active = inside || env.touch;
-      if (!active && !deformed) return;
-      const radius = Math.max(140, r.width * 0.16);
-      const skew = clamp(state.velocity * -0.25, -10, 10);
-      let any = false;
-      for (let i = 0; i < centers.length; i++) {
-        const c = centers[i];
-        const ox = c.line === 0 ? tx1 : tx2;
-        const dx = px - (c.x + ox);
-        const dy = py - c.y;
-        const f = active ? Math.exp(-(dx * dx + dy * dy) / (radius * radius)) : 0;
-        if (f > 0.002) any = true;
-        const tf =
-          f > 0.002 || Math.abs(skew) > 0.05
-            ? `translate3d(${(-dx * f * 0.06).toFixed(1)}px, ${(-f * 7).toFixed(2)}%, 0) scale(${(1 - f * 0.1).toFixed(3)}, ${(1 + f * 0.34).toFixed(3)}) skewX(${skew.toFixed(2)}deg)`
-            : "";
-        for (const layer of chars) if (layer[i]) layer[i].style.transform = tf;
-      }
-      deformed = any || Math.abs(skew) > 0.05;
+      // scroll: tear the wordmark apart; pointer: 3D tilt
+      const tear = p * state.vw * 0.2;
+      const lift = p * state.vh * 0.18;
+      const lT = `translate3d(${(-tear).toFixed(1)}px, ${lift.toFixed(1)}px, 0) rotate(${(-p * 4).toFixed(2)}deg)`;
+      const rT = `translate3d(${tear.toFixed(1)}px, ${(lift * 0.4).toFixed(1)}px, 0) rotate(${(p * 4).toFixed(2)}deg)`;
+      for (const el of lefts) el.style.transform = lT;
+      for (const el of rights) el.style.transform = rT;
+      tilt.x = lerp(tilt.x, state.pointerActive ? state.ny * -7 : 0, 0.08);
+      tilt.y = lerp(tilt.y, state.pointerActive ? state.nx * 9 : 0, 0.08);
+      const skew = clamp(state.velocity * -0.2, -8, 8);
+      st.style.transform = `perspective(1200px) rotateX(${tilt.x.toFixed(2)}deg) rotateY(${tilt.y.toFixed(2)}deg) skewX(${skew.toFixed(2)}deg)`;
+      st.style.opacity = (1 - p * 0.85).toFixed(3);
+      const fast = Math.abs(state.velocity) > 14;
+      if (fast !== st.classList.contains("is-fast")) st.classList.toggle("is-fast", fast);
     });
 
     return () => {
       off();
-      ro.disconnect();
       io.disconnect();
-      h1.removeEventListener("touchstart", touch);
-      h1.removeEventListener("touchmove", touch);
-      h1.removeEventListener("touchend", touchEnd);
+      st.removeEventListener("touchstart", touch);
+      st.removeEventListener("touchmove", touch);
+      st.removeEventListener("touchend", touchEnd);
     };
   }, []);
 
   return (
-    <section
-      ref={section}
-      id="top"
-      className="hero"
-      data-section="top"
-      data-label="SIGNAL"
-      data-idx="00"
-      aria-label="SPICY BOYS"
-    >
+    <section ref={section} id="top" className="hero" data-section="top" data-label="SIGNAL" data-idx="00" aria-label="GRUVINK">
       <div className="hero__frame" aria-hidden="true">
         <i />
         <i />
@@ -204,46 +133,35 @@ export function Hero() {
 
       <div className="hero__meta hero__meta--tl mono">
         <span className="hero__meta-k">FILE</span>
-        <span>SB_ARCHIVE / 001</span>
-        <span>
-          {SITE.members[0]} × {SITE.members[1]}
-        </span>
+        <span>GVK_ARCHIVE / 001</span>
+        <span>{SITE.tagline}</span>
       </div>
       <div className="hero__meta hero__meta--tr mono">
         <span className="hero__meta-k">LOC</span>
-        <span>
-          {SITE.city} / {SITE.region}
-        </span>
-        <span>
-          {SITE.coords.castelldefels.lat} {SITE.coords.castelldefels.lon}
-        </span>
+        <span>{SITE.city}</span>
+        <span>{SITE.links.instagramHandle.toUpperCase()}</span>
       </div>
 
-      <h1 ref={title} className="hero__title" data-cursor="lens">
-        <span className="sr-only">SPICY BOYS — hard techno DJs from Castelldefels, Barcelona</span>
-        <span className="hero__layer hero__layer--base" aria-hidden="true">
-          <Lines />
-        </span>
-        <span ref={lens} className="hero__layer hero__layer--lens" aria-hidden="true">
-          <Lines />
-        </span>
-        <span className="hero__tag mono" aria-hidden="true">
-          <span>
-            <b>■</b> {SITE.genre}
-          </span>
-          <span>{SITE.role}</span>
-          <span>{SITE.bpm}—160 BPM</span>
-        </span>
+      <h1 className="hero__title">
+        <span className="sr-only">GRUVINK — electronic music collective, Barcelona</span>
+        <div ref={stage} className="hero__stage" data-cursor="lens" aria-hidden="true">
+          <div className="hero__layer hero__layer--base">
+            <Mark src={SITE.logo} />
+          </div>
+          <div ref={lens} className="hero__layer hero__layer--lens">
+            <Mark src={SITE.logoSwap} />
+          </div>
+        </div>
       </h1>
 
       <div className="hero__bottom mono">
         <div className="hero__cell">
-          <span className="hero__meta-k">GENRE</span>
-          <span>{SITE.genre}</span>
+          <span className="hero__meta-k">TYPE</span>
+          <span>{SITE.kind}</span>
         </div>
         <div className="hero__cell">
-          <span className="hero__meta-k">ROLE</span>
-          <span>{SITE.role}</span>
+          <span className="hero__meta-k">SERIES</span>
+          <span>PODCAST · KORA</span>
         </div>
         <div className="hero__cell">
           <span className="hero__meta-k">YEAR</span>

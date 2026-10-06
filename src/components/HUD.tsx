@@ -81,7 +81,7 @@ export function HUD() {
     taps.current = [...taps.current.filter((x) => t - x < 700), t];
     if (taps.current.length >= 3) {
       taps.current = [];
-      emit("toast", "SB—SYS v2.6 · BUILT IN CASTELLDEFELS · TYPE “RAVE”");
+      emit("toast", "GVK—SYS v3.0 · BUILT IN BCN · TYPE “RAVE”");
     } else scrollToId("top");
   };
 
@@ -91,9 +91,10 @@ export function HUD() {
         Skip to music
       </a>
       <header className="hud">
-        <a href="#top" className="hud__logo" onClick={logoTap} aria-label="SPICY BOYS — back to top">
-          <span className="hud__logo-mark">SB</span>
-          <span className="hud__logo-sys mono">—SYS</span>
+        <a href="#top" className="hud__logo" onClick={logoTap} aria-label="GRUVINK — back to top">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="hud__logo-icon" src={SITE.icon} alt="" width={28} height={28} />
+          <span className="hud__logo-sys mono">GVK—SYS</span>
         </a>
         <nav className="hud__nav mono" aria-label="Sections">
           {NAV.map((n, i) => (
@@ -136,9 +137,7 @@ export function HUD() {
             <em>{now.playing ? "NOW PLAYING" : "PAUSED"}</em> {now.title}
           </span>
         ) : (
-          <span className="hud__coords">
-            {SITE.coords.castelldefels.lat} {SITE.coords.castelldefels.lon}
-          </span>
+          <span className="hud__coords">41.3874°N 2.1686°E</span>
         )}
         <span className="hud__progress">
           <span ref={bar} className="hud__progress-bar" />
@@ -149,7 +148,7 @@ export function HUD() {
       <div id="menu" className={`menu ${menu ? "is-open" : ""}`} aria-hidden={!menu}>
         <div className="menu__inner">
           <p className="menu__meta mono">
-            SB—SYS / INDEX · {SITE.city} / {SITE.region}
+            GVK—SYS / INDEX · {SITE.city}
           </p>
           <ul className="menu__list">
             {NAV.map((n, i) => (

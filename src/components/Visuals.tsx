@@ -172,7 +172,7 @@ export function Visuals() {
       className="visuals"
       data-section="visuals"
       data-label="VISUALS"
-      data-idx="02"
+      data-idx="04"
       aria-labelledby="visuals-title"
     >
       <svg className="sr-only" aria-hidden="true" focusable="false">
@@ -182,14 +182,14 @@ export function Visuals() {
         </filter>
       </svg>
 
-      <SectionHead idx="02" label="VISUALS" note={`FRAMES ${String(VISUALS.length).padStart(2, "0")}`} />
+      <SectionHead idx="04" label="VISUALS" note={`FRAMES ${String(VISUALS.length).padStart(2, "0")}`} />
 
       <div className="visuals__head">
         <h2 id="visuals-title" className="visuals__title" data-reveal data-fit data-fit-max="17">
           <Split text="VISUALS" className="fit-in" />
         </h2>
         <p className="visuals__lede mono" data-reveal>
-          Flyers, light and noise from the booth. Hover a frame to break the signal.
+          Nights, flyers and clips from the GRUVINK archive. Hover a frame to break the signal.
         </p>
       </div>
 

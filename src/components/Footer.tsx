@@ -11,11 +11,9 @@ export function Footer() {
       </div>
       <div className="footer__grid mono">
         <div>
-          <span className="footer__k">SB—SYS</span>
-          <span>© {SITE.year} SPICY BOYS</span>
-          <span>
-            {SITE.city} / {SITE.region}
-          </span>
+          <span className="footer__k">GVK—SYS</span>
+          <span>© {SITE.year} GRUVINK</span>
+          <span>{SITE.city}</span>
         </div>
         <div>
           <span className="footer__k">LINKS</span>
@@ -24,6 +22,9 @@ export function Footer() {
           </a>
           <a href={SITE.links.instagram} target="_blank" rel="noopener noreferrer" data-cursor="follow">
             INSTAGRAM ↗
+          </a>
+          <a href={SITE.links.youtube} target="_blank" rel="noopener noreferrer" data-cursor="open">
+            YOUTUBE ↗
           </a>
         </div>
         <div className="footer__keys">

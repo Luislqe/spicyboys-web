@@ -1,17 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { INTRO_TRACK } from "@/data/music";
+import { SITE } from "@/data/site";
 import { emit } from "@/lib/engine";
 
 const BLOCKS = 16;
-const LOG = ["CASTELLDEFELS NODE", "BCN UPLINK", "SUB 42HZ", "STROBE ARRAY"];
+const LOG = ["BCN NODE", "PODCAST FEED", "KORA ARRAY", "SUB 42HZ"];
 
 /**
- * Boot screen. ~0.9s on first visit, ~0.25s on repeat visits this session,
- * skipped with reduced motion. Never waits on anything but fonts (max 1.4s).
+ * Boot screen + sound gate.
+ * First visit in a session: ~0.9s boot, then "ENTER WITH SOUND / WITHOUT SOUND".
+ * Browsers only allow audio after a click, so this click is what lets the intro
+ * track (latest podcast, via the official SoundCloud player) start right away.
+ * Repeat visits in the same session skip the gate (~0.25s boot).
  */
 export function Loader() {
-  const [phase, setPhase] = useState<"run" | "out" | "gone">("run");
+  const [phase, setPhase] = useState<"run" | "gate" | "out" | "gone">("run");
+  const primary = useRef<HTMLButtonElement>(null);
+  const done = useRef<() => void>(() => {});
   const bar = useRef<HTMLSpanElement>(null);
   const pct = useRef<HTMLSpanElement>(null);
   const log = useRef<HTMLOListElement>(null);
@@ -40,9 +47,12 @@ export function Loader() {
       setPhase("out");
       window.setTimeout(() => setPhase("gone"), reduced ? 0 : 520);
     };
+    done.current = finish;
+    // first visit → ask about sound; repeat visit → straight in
+    const end = () => (seen || !INTRO_TRACK ? finish() : setPhase("gate"));
 
     if (dur === 0) {
-      finish();
+      end();
       return;
     }
 
@@ -61,24 +71,50 @@ export function Loader() {
       }
       if (pct.current) pct.current.textContent = String(Math.round(eased * 100)).padStart(3, "0") + "%";
       if (p < 1) raf = requestAnimationFrame(step);
-      else finish();
+      else end();
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  const enter = (withSound: boolean) => {
+    if (withSound && INTRO_TRACK) {
+      emit("play", INTRO_TRACK);
+      emit("player-min", true);
+    }
+    done.current();
+  };
+
+  useEffect(() => {
+    if (phase !== "gate") return;
+    primary.current?.focus();
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") enter(false);
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
   if (phase === "gone") return null;
 
   return (
-    <div className={`loader ${phase === "out" ? "is-out" : ""}`} aria-hidden="true">
+    <div
+      className={`loader ${phase === "out" ? "is-out" : ""} ${phase === "gate" ? "is-gate" : ""}`}
+      aria-hidden={phase !== "gate"}
+      role={phase === "gate" ? "dialog" : undefined}
+      aria-label={phase === "gate" ? "Enter GRUVINK" : undefined}
+    >
       <div className="loader__grid">
         <div className="loader__top mono">
-          <span>SB—SYS / BOOT SEQUENCE</span>
-          <span>v2.6</span>
+          <span>GVK—SYS / BOOT SEQUENCE</span>
+          <span>v3.1</span>
         </div>
         <div className="loader__name">
-          <span>SPICY</span>
-          <span>BOYS</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="loader__icon" src={SITE.icon} alt="" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="loader__logo" src={SITE.logo} alt="GRUVINK" />
         </div>
         <div className="loader__side mono">
           <span className="loader__idx">01</span>
@@ -92,12 +128,35 @@ export function Loader() {
             ))}
           </ol>
         </div>
-        <div className="loader__bar mono">
-          <span ref={bar}>{"░".repeat(BLOCKS)}</span>
-          <span ref={pct} className="loader__pct">
-            000%
-          </span>
-        </div>
+        {phase === "gate" ? (
+          <div className="gate">
+            <button ref={primary} className="gate__btn gate__btn--sound mono" onClick={() => enter(true)} data-cursor="play" data-cursor-label="ENTER">
+              <span className="gate__eq" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+              ENTRAR CON SONIDO
+            </button>
+            <button className="gate__btn mono" onClick={() => enter(false)} data-cursor="hover">
+              ENTRAR SIN SONIDO
+            </button>
+            {INTRO_TRACK && (
+              <span className="gate__now mono">
+                SUENA: {INTRO_TRACK.title}
+                {INTRO_TRACK.artist ? ` / ${INTRO_TRACK.artist}` : ""}
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="loader__bar mono">
+            <span ref={bar}>{"░".repeat(BLOCKS)}</span>
+            <span ref={pct} className="loader__pct">
+              000%
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

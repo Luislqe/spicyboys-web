@@ -1,84 +1,73 @@
 /**
- * MUSIC ARCHIVE
- * -------------
- * Everything here plays through the OFFICIAL SoundCloud widget (iframe + Widget API).
+ * SOUNDS — GRUVINK on SoundCloud (https://soundcloud.com/gruvink)
+ * ---------------------------------------------------------------
+ * Everything plays through the OFFICIAL SoundCloud widget (iframe + Widget API).
  * No audio is downloaded or proxied.
  *
- * State of the SoundCloud profile when this was built (Sep 2026):
- *   - 0 own uploads
- *   - 3 public playlists curated by SPICY BOYS (tracks by other artists)
- * So they are labelled as SELECTIONS, never as own releases.
- *
- * To add an original track/set: add an entry with kind "original" and the public
- * SoundCloud URL. Order in the array = order in the list.
- * An entry without `url` renders as a locked "incoming" slot.
+ * To add a new podcast or set: copy a line, paste it at the top, change the
+ * title, date and public SoundCloud URL. Order in the array = order on the page.
+ * An entry without `url` renders as a locked "coming soon" slot.
  */
-export type MusicKind = "original" | "set" | "selection";
+export type MusicKind = "podcast" | "set" | "playlist" | "original";
 
 export type MusicItem = {
   id: string;
   title: string;
+  /** small line under/next to the title (artist, venue…) */
+  artist?: string;
   kind: MusicKind;
   year: string;
-  /** Public SoundCloud URL (track, set or playlist). */
   url?: string;
-  /** Short metadata shown on hover. */
   meta: string;
-  /** Seed for the generated cover art (used when no `cover` is provided). */
+  /** seed for the generated cover (used when no `cover`) */
   seed: number;
-  /** Optional own artwork, e.g. "/covers/lake-groove.jpg" (must be yours to use). */
   cover?: string;
 };
 
+const SC = "https://soundcloud.com/gruvink";
+
 export const MUSIC: MusicItem[] = [
-  {
-    id: "the-lake-groove",
-    title: "THE LAKE GROOVE",
-    kind: "selection",
-    year: "2025",
-    url: "https://soundcloud.com/sasha-borrego-672612851/sets/the-lake-groove",
-    meta: "5 TRACKS · HYPNOTIC / DEEP GROOVE",
-    seed: 3,
-  },
-  {
-    id: "electro",
-    title: "ELECTRO",
-    kind: "selection",
-    year: "2025",
-    url: "https://soundcloud.com/sasha-borrego-672612851/sets/electro",
-    meta: "5 TRACKS · BROKEN / MACHINE FUNK",
-    seed: 11,
-  },
-  {
-    id: "localito-16",
-    title: "LOCALITO 16",
-    kind: "selection",
-    year: "2025",
-    url: "https://soundcloud.com/sasha-borrego-672612851/sets/localito-16",
-    meta: "LIVE SELECTION · IZIAL & DBØ",
-    seed: 16,
-  },
-  {
-    id: "sb-001",
-    title: "SB—001",
-    kind: "original",
-    year: "2026",
-    meta: "FIRST ORIGINAL · SIGNAL PENDING",
-    seed: 1,
-  },
+  { id: "p26", title: "PODCAST 26", artist: "4R15", kind: "podcast", year: "2026", url: `${SC}/podcast-26-4r15`, meta: "AUG 2026", seed: 26 },
+  { id: "p25", title: "PODCAST 25", artist: "POL VERDÉS", kind: "podcast", year: "2026", url: `${SC}/podcast-25-pol-verdes`, meta: "JUL 2026", seed: 25 },
+  { id: "p23", title: "PODCAST 23", artist: "ALBERT VERYN", kind: "podcast", year: "2026", url: `${SC}/podcast-23-albert-veryn`, meta: "MAY 2026", seed: 23 },
+  { id: "p22", title: "PODCAST 22", artist: "ROUXXE", kind: "podcast", year: "2026", url: `${SC}/podcast-22-rouxxe`, meta: "MAY 2026", seed: 22 },
+  { id: "p21", title: "PODCAST 21", artist: "MEDINA", kind: "podcast", year: "2026", url: `${SC}/podcast-21-medina`, meta: "MAY 2026", seed: 21 },
+  { id: "p20", title: "PODCAST 20", artist: "BRANDO", kind: "podcast", year: "2026", url: `${SC}/podcast-20-brando`, meta: "MAR 2026", seed: 20 },
+  { id: "k-avraxas", title: "KORA 001", artist: "AVRAXAS B2B DBØ", kind: "set", year: "2026", url: `${SC}/avraxas-b2b-dbo-1`, meta: "VINYL ONLY", seed: 11 },
+  { id: "k-chamox", title: "KORA 001", artist: "CHAMÓX", kind: "set", year: "2026", url: `${SC}/kora-001-chamox`, meta: "LIVE AT KORA", seed: 12 },
+  { id: "k-nandes", title: "KORA 001", artist: "NANDES", kind: "set", year: "2026", url: `${SC}/kora-001-nandes`, meta: "LIVE AT KORA", seed: 13 },
 ];
 
+/**
+ * Track offered when entering the site ("ENTRAR CON SONIDO").
+ * By default the newest item in MUSIC. Set to null to disable the sound gate.
+ */
+export const INTRO_TRACK: MusicItem | null = MUSIC[0] ?? null;
+
+/** The KORA 001 playlist (used by the KORA section's "listen" button). */
+export const KORA_PLAYLIST: MusicItem = {
+  id: "kora-001",
+  title: "KORA 001",
+  artist: "FULL NIGHT",
+  kind: "playlist",
+  year: "2026",
+  url: `${SC}/sets/fiesta-kora`,
+  meta: "ALL SETS",
+  seed: 1,
+};
+
 export const KIND_LABEL: Record<MusicKind, string> = {
+  podcast: "PODCAST",
+  set: "LIVE SET",
+  playlist: "PLAYLIST",
   original: "ORIGINAL",
-  set: "DJ SET",
-  selection: "SELECTION",
 };
 
 export const widgetSrc = (url: string, autoPlay = true) =>
   "https://w.soundcloud.com/player/?" +
   new URLSearchParams({
     url,
-    color: "#ff2d1a",
+    color: "#bff851",
     auto_play: String(autoPlay),
     hide_related: "true",
     show_comments: "false",

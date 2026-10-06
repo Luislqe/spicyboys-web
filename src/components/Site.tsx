@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { About } from "./About";
 import { Background } from "./Background";
-import { Connected } from "./Connected";
+import { Artists } from "./Artists";
+import { Events } from "./Events";
 import { Cursor } from "./Cursor";
 import { Extras } from "./Extras";
 import { Follow } from "./Follow";
@@ -91,7 +92,7 @@ export function Site() {
             variant="solid"
             speed={70}
             followScroll
-            items={["HARD TECHNO", "SPICY BOYS", "CASTELLDEFELS", "BCN"]}
+            items={["GRUVINK", "PODCAST", "KORA", "BARCELONA"]}
           />
           <Marquee
             variant="outline"
@@ -99,23 +100,23 @@ export function Site() {
             reverse
             followScroll
             sep="✕"
-            items={["IZIAL", "DBØ", "RAVE", "UNDERGROUND", "150 BPM"]}
+            items={["SPICY BOYS", "IZIAL", "DBØ", "AVRAXAS", "CHAMÓX", "NANDES"]}
           />
           <Marquee
             variant="tape"
             speed={120}
             sep="■"
             items={[
-              "SELECTION",
-              "STORYTELLING",
-              "THE MOMENT",
+              "GROOVE",
+              "INK",
+              "AFTER DARK",
               "NO VIP",
-              "KICK FIRST",
-              "SELECTION",
-              "STORYTELLING",
-              "THE MOMENT",
+              "PODCAST Nº26 OUT NOW",
+              "GROOVE",
+              "INK",
+              "AFTER DARK",
               "NO VIP",
-              "KICK FIRST",
+              "PODCAST Nº26 OUT NOW",
             ]}
           />
         </div>
@@ -126,11 +127,12 @@ export function Site() {
           speed={40}
           reverse
           sep="//"
-          items={Array.from({ length: 4 }, () => ["SB—SYS", "41.2800°N 1.9700°E", "SIGNAL OK", "VISUALS INCOMING"]).flat()}
+          items={Array.from({ length: 4 }, () => ["GVK—SYS", "41.3874°N 2.1686°E", "SIGNAL OK", "ARTISTS INCOMING"]).flat()}
         />
+        <Artists />
+        <Events />
         <Visuals />
         <About />
-        <Connected />
         <Follow />
       </main>
       <Footer />

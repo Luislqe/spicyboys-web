@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import Script from "next/script";
 import { Archivo, JetBrains_Mono } from "next/font/google";
 import { SITE } from "@/data/site";
 import "./globals.css";
@@ -28,34 +29,34 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: "SPICY BOYS — Hard Techno · Castelldefels / BCN",
-    template: "%s · SPICY BOYS",
+    default: "GRUVINK — Collective · Podcast · KORA · Barcelona",
+    template: "%s · GRUVINK",
   },
   description: SITE.description,
   keywords: [
+    "GRUVINK",
+    "KORA",
+    "podcast techno",
+    "electronic music collective",
+    "Barcelona",
     "SPICY BOYS",
     "IZIAL",
     "DBØ",
-    "hard techno",
-    "techno Barcelona",
-    "Castelldefels",
-    "DJ",
-    "rave",
     "underground",
   ],
-  authors: [{ name: "SPICY BOYS" }],
+  authors: [{ name: "GRUVINK" }],
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "es_ES",
     url: "/",
-    siteName: "SPICY BOYS",
-    title: "SPICY BOYS — Hard Techno · Castelldefels / BCN",
+    siteName: "GRUVINK",
+    title: "GRUVINK — Collective · Podcast · KORA",
     description: SITE.description,
   },
   twitter: {
     card: "summary_large_image",
-    title: "SPICY BOYS — Hard Techno",
+    title: "GRUVINK",
     description: SITE.description,
   },
   robots: { index: true, follow: true },
@@ -64,12 +65,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" className={`${display.variable} ${mono.variable}`} suppressHydrationWarning>
-      <head>
-        {/* flag JS early so reveal/loader styles never flash for no-JS visitors */}
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
-        <link rel="preconnect" href="https://w.soundcloud.com" />
-      </head>
-      <body>{children}</body>
+      <body>
+        {/* flag JS before hydration so reveal/loader styles never flash for no-JS visitors */}
+        <Script id="sb-js-flag" strategy="beforeInteractive">
+          {"document.documentElement.classList.add('js')"}
+        </Script>
+        {children}
+      </body>
     </html>
   );
 }

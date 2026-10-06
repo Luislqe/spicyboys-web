@@ -25,8 +25,8 @@ export function Music() {
   const [active, setActive] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
 
-  const playable = MUSIC.filter((m) => m.url);
-  const originals = MUSIC.filter((m) => m.kind === "original" && m.url).length;
+  const podcasts = MUSIC.filter((m) => m.kind === "podcast").length;
+  const sets = MUSIC.filter((m) => m.kind === "set").length;
 
   useEffect(() => {
     const offs = [
@@ -90,7 +90,7 @@ export function Music() {
       data-idx="01"
       aria-labelledby="sounds-title"
     >
-      <SectionHead idx="01" label="SOUNDS" note="ARCHIVE / SOUNDCLOUD" />
+      <SectionHead idx="01" label="SOUNDS" note="PODCAST / LIVE SETS" />
 
       <div className="music__head">
         <h2 id="sounds-title" ref={titleRef} className="music__title" data-reveal data-fit data-fit-max="24">
@@ -98,14 +98,12 @@ export function Music() {
         </h2>
         <div className="music__stats mono" data-reveal>
           <span>
-            <b>{String(playable.length).padStart(2, "0")}</b> SELECTIONS ONLINE
+            <b>{String(podcasts).padStart(2, "0")}</b> PODCASTS ONLINE
           </span>
           <span>
-            <b>{String(originals).padStart(2, "0")}</b> ORIGINALS — FIRST ONE INCOMING
+            <b>{String(sets).padStart(2, "0")}</b> LIVE SETS FROM KORA
           </span>
-          <span>
-            {SITE.manifesto.join(" / ")}
-          </span>
+          <span>NEW EPISODES ON SOUNDCLOUD</span>
           <a href={SITE.links.soundcloud} target="_blank" rel="noopener noreferrer" data-cursor="open">
             FULL PROFILE ON SOUNDCLOUD ↗
           </a>
@@ -114,8 +112,8 @@ export function Music() {
 
       <div className="music__cols mono" aria-hidden="true">
         <span>NO.</span>
-        <span>TITLE</span>
-        <span>TYPE</span>
+        <span>ARTIST</span>
+        <span>SERIES</span>
         <span>INFO</span>
         <span>YEAR</span>
         <span />
@@ -144,7 +142,7 @@ export function Music() {
                   aria-label={
                     locked
                       ? `${m.title} — coming soon`
-                      : `Play ${m.title}, ${KIND_LABEL[m.kind].toLowerCase()}, ${m.year}`
+                      : `Play ${m.title}${m.artist ? ` — ${m.artist}` : ""}, ${KIND_LABEL[m.kind].toLowerCase()}`
                   }
                 >
                   <span className="track__fill" aria-hidden="true" />
@@ -153,9 +151,9 @@ export function Music() {
                     <Art style={styleFor(m.seed)} seed={m.seed} ratio={1} alt="" base={72} src={m.cover} />
                   </span>
                   <span className="track__title">
-                    <span className="track__title-in">{m.title}</span>
+                    <span className="track__title-in">{m.artist ?? m.title}</span>
                   </span>
-                  <span className="track__kind mono">{KIND_LABEL[m.kind]}</span>
+                  <span className="track__kind mono">{m.artist ? m.title : KIND_LABEL[m.kind]}</span>
                   <span className="track__meta mono">{m.meta}</span>
                   <span className="track__year mono">{m.year}</span>
                   <span className="track__cta mono">
@@ -183,7 +181,7 @@ export function Music() {
             <div key={m.id} className={`music__cover ${hover === i ? "is-on" : ""}`}>
               <Art style={styleFor(m.seed)} seed={m.seed} ratio={1} alt="" base={160} src={m.cover} />
               <span className="music__cover-tag mono">
-                {String(i + 1).padStart(2, "0")} / {KIND_LABEL[m.kind]}
+                {m.title} / {KIND_LABEL[m.kind]}
               </span>
             </div>
           ))}
@@ -191,8 +189,8 @@ export function Music() {
       </div>
 
       <p className="music__note mono" data-reveal>
-        Selections are playlists curated by SPICY BOYS; tracks belong to their original artists and play
-        through SoundCloud’s official player.
+        Podcasts and live sets from GRUVINK, played through SoundCloud’s official player. Each mix
+        belongs to the artist who recorded it.
       </p>
     </section>
   );

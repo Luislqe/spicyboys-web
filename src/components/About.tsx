@@ -6,17 +6,17 @@ import { scramble } from "@/lib/engine";
 import { SectionHead } from "./SectionHead";
 
 const ROWS = [
-  { word: "SPICY BOYS", meta: `${SITE.members[0]} × ${SITE.members[1]}`, alt: "TWO ARTISTS / ONE BOOTH" },
-  { word: "CASTELLDEFELS", meta: `${SITE.coords.castelldefels.lat} ${SITE.coords.castelldefels.lon}`, alt: "HOME NODE / 08860" },
-  { word: "BARCELONA", meta: `${SITE.coords.barcelona.lat} ${SITE.coords.barcelona.lon}`, alt: "20.4 KM / BEARING 054°" },
-  { word: "HARD TECHNO", meta: "145 — 160 BPM", alt: "KICK FIRST. ALWAYS." },
-  { word: "RAVE", meta: "02:00 — 07:00", alt: "UNTIL THE LIGHTS COME ON" },
-  { word: "UNDERGROUND", meta: SITE.manifesto.join(" / "), alt: "NO VIP. NO FILTER." },
+  { word: "GRUVINK", meta: "COLLECTIVE / BCN", alt: "SAY IT: GROOVE-INK" },
+  { word: "PODCAST", meta: "Nº 20 — 26 / SOUNDCLOUD", alt: "A NEW GUEST EVERY EDITION" },
+  { word: "KORA", meta: "EDITION 001 / 2026", alt: "THE GRUVINK NIGHT" },
+  { word: "SPICY BOYS", meta: "IZIAL × DBØ", alt: "TWO ARTISTS / ONE BOOTH" },
+  { word: "BARCELONA", meta: "41.3874°N 2.1686°E", alt: "HOME NODE" },
+  { word: "UNDERGROUND", meta: "AFTER DARK", alt: "NO VIP. NO FILTER." },
 ];
 
 /**
  * INDEX — the "about" as an archive card. Almost no prose.
- * Radar shows Barcelona's real bearing/distance from Castelldefels.
+ * The radar is decorative: one blip per roster entry.
  */
 export function About() {
   const metas = useRef<(HTMLSpanElement | null)[]>([]);
@@ -32,12 +32,12 @@ export function About() {
       className="about"
       data-section="about"
       data-label="INDEX"
-      data-idx="03"
+      data-idx="05"
       aria-labelledby="about-title"
     >
-      <SectionHead idx="03" label="INDEX" note="SB_ID / CARD" />
+      <SectionHead idx="05" label="INDEX" note="GVK_ID / CARD" />
       <h2 id="about-title" className="sr-only">
-        About SPICY BOYS
+        About GRUVINK
       </h2>
 
       <div className="about__grid">
@@ -49,38 +49,35 @@ export function About() {
               <circle cx="100" cy="100" r="32" />
               <line x1="100" y1="0" x2="100" y2="200" />
               <line x1="0" y1="100" x2="200" y2="100" />
-              {/* BCN: 20.4 km at 054° → scaled on the 32 km outer ring */}
-              <circle className="radar__blip" cx={100 + 61 * Math.sin((54 * Math.PI) / 180)} cy={100 - 61 * Math.cos((54 * Math.PI) / 180)} r="3.5" />
+              <circle className="radar__blip" cx="149" cy="64" r="3.5" />
+              <circle className="radar__blip" cx="62" cy="128" r="3" />
+              <circle className="radar__blip" cx="128" cy="150" r="2.5" />
               <circle className="radar__home" cx="100" cy="100" r="4" />
             </svg>
             <span className="radar__sweep" />
-            <span className="radar__lbl radar__lbl--home mono">CDF</span>
-            <span className="radar__lbl radar__lbl--bcn mono">BCN</span>
+            <span className="radar__lbl radar__lbl--home mono">GVK</span>
+            <span className="radar__lbl radar__lbl--bcn mono">SB</span>
           </div>
           <dl className="about__data mono">
             <div>
               <dt>ID</dt>
-              <dd>SB—001</dd>
+              <dd>GVK—001</dd>
             </div>
             <div>
-              <dt>CREW</dt>
-              <dd>
-                {SITE.members[0]} / {SITE.members[1]}
-              </dd>
+              <dt>TYPE</dt>
+              <dd>{SITE.kind}</dd>
             </div>
             <div>
               <dt>BASE</dt>
-              <dd>
-                {SITE.city} / {SITE.region}
-              </dd>
+              <dd>{SITE.city}</dd>
             </div>
             <div>
-              <dt>STATUS</dt>
-              <dd>ACTIVE / 2026</dd>
+              <dt>OUTPUT</dt>
+              <dd>PODCAST · KORA</dd>
             </div>
           </dl>
           <p className="about__line">
-            Two artists. One way of reading the dancefloor: <em>selection, storytelling and the moment.</em>
+            A collective built around the dancefloor: <em>podcasts, nights and the people who play them.</em>
           </p>
         </aside>
 

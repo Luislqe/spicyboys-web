@@ -65,8 +65,8 @@ export function Extras() {
     window.addEventListener("keydown", key);
 
     console.log(
-      "%c SPICY BOYS %c SB—SYS v2.6 · CASTELLDEFELS / BCN · type R-A-V-E on the page ",
-      "background:#ff2d1a;color:#050505;font-weight:900;padding:4px 6px",
+      "%c GRUVINK %c GVK—SYS v3.0 · BCN · type R-A-V-E on the page ",
+      "background:#bff851;color:#482581;font-weight:900;padding:4px 6px",
       "background:#050505;color:#ece8e1;padding:4px 6px",
     );
 

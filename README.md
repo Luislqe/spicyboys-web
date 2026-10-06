@@ -1,6 +1,6 @@
-# SPICY BOYS — SB—SYS v2.6
+# GRUVINK — GVK—SYS v3.0
 
-Web oficial de SPICY BOYS (IZIAL × DBØ) · Hard techno · Castelldefels / BCN.
+Web del colectivo GRUVINK · Podcasts · Fiestas KORA · Artistas (SPICY BOYS, IZIAL, DBØ…) · Barcelona.
 Next.js (App Router) · TypeScript · React 19 · Tailwind v4 (tokens) · CSS a medida · 0 librerías de animación.
 
 ## Arrancar
@@ -23,7 +23,11 @@ NEXT_PUBLIC_SITE_URL=https://tudominio.com
 | Qué | Archivo |
 |---|---|
 | Nombre, links, coordenadas, BPM, textos base | `src/data/site.ts` |
-| Tracks / sets / selecciones de SoundCloud | `src/data/music.ts` |
+| Podcasts y sets de SoundCloud | `src/data/music.ts` |
+| Artistas del colectivo | `src/data/artists.ts` |
+| Eventos (próximos y pasados) | `src/data/events.ts` |
+| Canción al entrar ("ENTRAR CON SONIDO") | `INTRO_TRACK` en `src/data/music.ts` |
+| Logo, icono | `public/brand/` (gruvink.svg, gruvink-icon.svg, gruvink-swap.svg) |
 | Fotos de la galería VISUALS | `src/data/visuals.ts` (+ imágenes en `/public/visuals`) |
 | Colores, tipografía, todo el diseño | `src/app/globals.css` (tokens en `:root`) |
 

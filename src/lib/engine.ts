@@ -45,6 +45,9 @@ let last = 0;
 let prevScroll = 0;
 let started = false;
 
+/** Eased wheel scrolling (hijacks the wheel). Off by default. */
+const SMOOTH_WHEEL = false;
+
 // ── smooth scroll state
 let smoothOn = false;
 let target = 0;
@@ -154,8 +157,9 @@ export function initEngine() {
   window.addEventListener("pointermove", onPointer, { passive: true });
   window.addEventListener("scroll", onNativeScroll, { passive: true });
 
-  // Smooth wheel only on real mice / trackpads, never with reduced motion.
-  if (!env.reduced && !env.touch) {
+  // Wheel smoothing is OFF: native scrolling felt better on Windows mice.
+  // Flip SMOOTH_WHEEL to true to re-enable the eased wheel scroll.
+  if (SMOOTH_WHEEL && !env.reduced && !env.touch) {
     smoothOn = true;
     document.documentElement.classList.add("has-smooth");
     window.addEventListener("wheel", onWheel, { passive: false });

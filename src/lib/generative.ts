@@ -8,8 +8,8 @@ import type { VisualStyle } from "@/data/visuals";
 
 const BONE: [number, number, number] = [236, 232, 225];
 const VOID: [number, number, number] = [9, 9, 10];
-const RED: [number, number, number] = [255, 45, 26];
-const RED_DK: [number, number, number] = [70, 10, 8];
+const RED: [number, number, number] = [191, 248, 81]; // lime (brand)
+const RED_DK: [number, number, number] = [72, 37, 129]; // violet (brand)
 
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16);
 
@@ -150,12 +150,12 @@ export function drawArt(canvas: HTMLCanvasElement, style: VisualStyle, seed: num
       ctx.fillStyle = "#fff";
       ctx.font = `900 ${Math.round(W * 0.62)}px Archivo, "Arial Black", Arial, sans-serif`;
       ctx.textBaseline = "top";
-      ctx.fillText("SB", -W * 0.04, H * 0.04);
+      ctx.fillText("GV", -W * 0.04, H * 0.04);
       ctx.fillStyle = red;
       ctx.fillText("26", W * 0.12, H * 0.42);
       ctx.fillStyle = "#fff";
       ctx.font = `700 ${Math.round(W * 0.055)}px "JetBrains Mono", monospace`;
-      ["HARD TECHNO", "CASTELLDEFELS / BCN", "IZIAL × DBØ", "02:00 — CLOSE"].forEach((t, i) =>
+      ["GRUVINK", "KORA 001", "PODCAST SERIES", "02:00 — CLOSE"].forEach((t, i) =>
         ctx.fillText(t, W * 0.06, H * 0.8 + i * W * 0.065),
       );
       break;

@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { SITE } from "@/data/site";
 import { useMagnetic } from "@/lib/hooks";
 
-const RING = "FOLLOW THE NOISE • @SPICYBOYS.GVK • INSTAGRAM • ";
+const RING = "FOLLOW THE NOISE • @GRUVINK • INSTAGRAM • ";
 
 /** FOLLOW THE NOISE — magnetic Instagram disc. Hovering it turns the page grain up. */
 export function Follow() {
@@ -23,12 +23,15 @@ export function Follow() {
       className={`follow ${hot ? "is-hot" : ""}`}
       data-section="follow"
       data-label="FOLLOW"
-      data-idx="05"
+      data-idx="06"
       aria-labelledby="follow-title"
     >
       <div className="follow__meta mono" data-reveal>
-        <span>[05] OUTPUT</span>
-        <span>INSTAGRAM · {SITE.links.instagramHandle.toUpperCase()}</span>
+        <span>[06] OUTPUT</span>
+        <span className="follow__nets">
+          <a href={SITE.links.soundcloud} target="_blank" rel="noopener noreferrer" data-cursor="open">SOUNDCLOUD ↗</a>
+          <a href={SITE.links.youtube} target="_blank" rel="noopener noreferrer" data-cursor="open">YOUTUBE ↗</a>
+        </span>
       </div>
 
       <h2 id="follow-title" className="follow__title">

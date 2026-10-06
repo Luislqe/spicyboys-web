@@ -1,4 +1,5 @@
 import { Site } from "@/components/Site";
+import { ARTISTS } from "@/data/artists";
 import { MUSIC } from "@/data/music";
 import { SITE } from "@/data/site";
 
@@ -7,14 +8,14 @@ const jsonLd = {
   "@type": "MusicGroup",
   name: SITE.name,
   url: SITE.url,
-  genre: ["Hard Techno", "Techno"],
+  genre: ["Electronic", "Techno"],
   description: SITE.description,
-  foundingLocation: { "@type": "Place", name: "Castelldefels, Barcelona, Spain" },
-  member: SITE.members.map((m) => ({ "@type": "Person", name: m })),
-  sameAs: [SITE.links.soundcloud, SITE.links.instagram],
-  track: MUSIC.filter((m) => m.url && m.kind === "original").map((m) => ({
+  foundingLocation: { "@type": "Place", name: "Barcelona, Spain" },
+  member: ARTISTS.map((a) => ({ "@type": "MusicGroup", name: a.name })),
+  sameAs: [SITE.links.instagram, SITE.links.soundcloud, SITE.links.youtube],
+  track: MUSIC.filter((m) => m.url).map((m) => ({
     "@type": "MusicRecording",
-    name: m.title,
+    name: m.artist ? `${m.title} / ${m.artist}` : m.title,
     url: m.url,
   })),
 };

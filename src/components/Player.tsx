@@ -102,6 +102,7 @@ export function Player() {
       }),
     [],
   );
+  useEffect(() => on("player-min", (v) => setMin(!!v)), []);
 
   // (re)bind the Widget API every time a new iframe mounts
   const bind = useCallback(() => {
@@ -204,7 +205,7 @@ export function Player() {
         <div className="player__inner">
           <div className="player__hud">
             <div className="player__top mono">
-              <span>SPICY BOYS</span>
+              <span>GRUVINK</span>
               <span className={`player__state ${playing ? "is-on" : ""}`}>
                 <i aria-hidden="true" /> {playing ? "NOW PLAYING" : ready ? "READY" : api === "failed" ? "OFFLINE" : "LINKING…"}
               </span>

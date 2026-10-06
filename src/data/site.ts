@@ -1,39 +1,37 @@
 /**
- * SPICY BOYS — single source of truth for identity, links and metadata.
+ * GRUVINK — single source of truth for identity, links and metadata.
  * Edit here; every section reads from this file.
  */
 export const SITE = {
-  name: "SPICY BOYS",
-  members: ["IZIAL", "DBØ"],
-  genre: "HARD TECHNO",
-  role: "DJ / PRODUCER",
-  city: "CASTELLDEFELS",
+  name: "GRUVINK",
+  handle: "GVK",
+  tagline: "COLLECTIVE / PODCAST / EVENTS",
+  kind: "COLLECTIVE",
+  city: "BARCELONA",
   region: "BCN",
   year: "2026",
   bpm: 150,
-  // Castelldefels & Barcelona — used as HUD data, not as tracking.
-  coords: {
-    castelldefels: { lat: "41.2800°N", lon: "1.9700°E" },
-    barcelona: { lat: "41.3874°N", lon: "2.1686°E" },
-  },
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://spicyboys.example",
+  /** brand files live in /public/brand */
+  logo: "/brand/gruvink.svg",
+  icon: "/brand/gruvink-icon.svg",
+  /** colour-swapped wordmark used inside the hero lens */
+  logoSwap: "/brand/gruvink-swap.svg",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://gruvink.es",
   links: {
-    soundcloud: "https://soundcloud.com/sasha-borrego-672612851",
-    instagram: "https://www.instagram.com/spicyboys.gvk/",
-    instagramHandle: "@spicyboys.gvk",
-    gruvink: "https://www.instagram.com/gruvink/",
-    gruvinkHandle: "@gruvink",
+    instagram: "https://www.instagram.com/gruvink/",
+    instagramHandle: "@gruvink",
+    soundcloud: "https://soundcloud.com/gruvink",
+    youtube: "https://www.youtube.com/@gruvink",
   },
-  // Paraphrased from the SoundCloud bio.
   manifesto: ["SELECTION", "STORYTELLING", "THE MOMENT"],
   description:
-    "SPICY BOYS — IZIAL & DBØ. Hard techno desde Castelldefels / Barcelona. Selecciones, sets y ruido underground.",
+    "GRUVINK — colectivo de música electrónica de Barcelona. Podcasts, fiestas KORA y artistas como SPICY BOYS.",
 } as const;
 
 export const NAV = [
   { id: "sounds", label: "SOUNDS", idx: "01" },
-  { id: "visuals", label: "VISUALS", idx: "02" },
-  { id: "about", label: "INDEX", idx: "03" },
-  { id: "connected", label: "CONNECTED", idx: "04" },
+  { id: "artists", label: "ARTISTS", idx: "02" },
+  { id: "events", label: "EVENTOS", idx: "03" },
+  { id: "visuals", label: "VISUALS", idx: "04" },
   { id: "follow", label: "FOLLOW", idx: "05" },
 ] as const;
